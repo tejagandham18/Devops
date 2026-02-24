@@ -130,3 +130,259 @@ A system that tracks file changes and allows collaboration and recovery of previ
 ---
 
 ✅ *End of Day-1 DevOps Notes*
+
+
+# DevOps Day 2 Notes
+# Git Lifecycle, Branches & Most Used Git Commands
+
+---
+
+# 1️⃣ Git Lifecycle
+
+Git lifecycle explains the stages a file goes through in Git.
+
+Git is a Distributed Version Control System used in DevOps to track and manage code changes.
+
+---
+
+## 🔁 Git File States
+
+A file moves through three main stages:
+
+Working Directory → Staging Area → Repository
+
+---
+
+## 🟢 1. Working Directory
+
+- This is where you create or modify files.
+- Git sees the file but is not tracking changes yet.
+
+Example:
+You edit `app.py`.
+
+---
+
+## 🟢 2. Staging Area (Index)
+
+- Files are prepared before saving permanently.
+- You choose which changes to include in the next commit.
+
+Command used:
+git add filename
+
+Purpose:
+Moves changes from Working Directory to Staging Area.
+
+---
+
+## 🟢 3. Repository (Commit Stage)
+
+- Changes are saved permanently as a snapshot.
+- Each save is called a commit.
+
+Command used:
+git commit -m "message"
+
+Purpose:
+Stores changes safely with a meaningful message.
+
+---
+
+## 🔁 Complete Lifecycle Flow
+
+Edit → Add → Commit → Push
+
+Edit  → Modify file  
+Add   → Prepare changes  
+Commit → Save version  
+Push  → Upload to remote repository  
+
+---
+
+# 2️⃣ What are Branches in Git?
+
+A branch in Git is a separate line of development.
+
+It allows developers to work on features or fixes without affecting the main (production) code.
+
+---
+
+## 🌿 Why Branches are Important in DevOps
+
+- Keeps production code stable
+- Allows parallel development
+- Supports CI/CD workflows
+- Enables team collaboration
+- Reduces risk of breaking main branch
+
+---
+
+## 🧠 How Branches Work
+
+When you create a branch:
+- Git does NOT copy the entire project.
+- It creates a new pointer to the current commit.
+- You can modify files safely.
+- Main branch remains unchanged.
+
+---
+
+## 🔁 Branch Workflow Example
+
+1. main → Stable production code
+2. Create feature branch
+3. Make changes
+4. Test locally
+5. Merge into main
+6. Push to remote
+7. CI/CD pipeline triggers
+
+---
+
+## 🌳 Example Branch Structure
+
+main (Production)
+│
+├── develop (Testing)
+│
+├── feature-login
+├── feature-payment
+└── hotfix-bug
+
+---
+
+# 3️⃣ Top 10 Most Used Git Commands in DevOps
+
+These commands are used daily in real DevOps environments.
+
+---
+
+## 1. git clone
+
+git clone repository-url
+
+Why it is used:
+To copy an existing remote repository to your local system.
+Used when starting work on a project.
+
+---
+
+## 2. git status
+
+git status
+
+Why it is used:
+To check file status.
+Shows modified, staged, and untracked files.
+
+---
+
+## 3. git add .
+
+git add .
+
+Why it is used:
+Moves all modified files to staging area.
+Prepares files for commit.
+
+---
+
+## 4. git commit -m "message"
+
+git commit -m "Added login feature"
+
+Why it is used:
+Saves changes permanently in repository.
+Creates a snapshot version.
+
+---
+
+## 5. git branch
+
+git branch
+
+Why it is used:
+Lists available branches.
+Helps identify current working branch.
+
+---
+
+## 6. git checkout -b branch-name
+
+git checkout -b feature-login
+
+Why it is used:
+Creates and switches to a new branch.
+Used for feature development.
+
+---
+
+## 7. git switch branch-name
+
+git switch main
+
+Why it is used:
+Switches between branches.
+Keeps workflow organized.
+
+---
+
+## 8. git merge branch-name
+
+git merge feature-login
+
+Why it is used:
+Combines changes from one branch into another.
+Commonly merges feature into main.
+
+---
+
+## 9. git pull
+
+git pull origin main
+
+Why it is used:
+Downloads latest changes from remote repository.
+Keeps local code updated.
+
+---
+
+## 10. git push
+
+git push origin main
+
+Why it is used:
+Uploads committed changes to remote repository.
+Triggers CI/CD pipelines in DevOps.
+
+---
+
+# 4️⃣ Real DevOps Workflow Example
+
+Step 1: Clone repository  
+Step 2: Create feature branch  
+Step 3: Make changes  
+Step 4: Add and commit  
+Step 5: Push feature branch  
+Step 6: Merge into main  
+Step 7: CI/CD automatically builds and deploys  
+
+---
+
+# 🎯 Interview Summary
+
+Git Lifecycle:
+The process of moving files from working directory to staging area and committing them to repository.
+
+Branches:
+A separate line of development that allows safe and parallel work without affecting main code.
+
+Most Used Git Commands:
+clone, status, add, commit, branch, checkout, switch, merge, pull, push.
+
+These commands are essential for collaboration, automation, and CI/CD in DevOps.
+
+---
+
+✅ End of Day 2 DevOps Notes
