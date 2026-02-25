@@ -386,3 +386,199 @@ These commands are essential for collaboration, automation, and CI/CD in DevOps.
 ---
 
 ✅ End of Day 2 DevOps Notes
+
+# DevOps Day 3 Notes
+# Git Merge, Git Rebase & Merge Conflicts
+
+---
+
+# 1️⃣ What is Git Merge?
+
+Git merge is used to combine changes from one branch into another branch.
+
+It preserves the history of both branches and creates a special commit called a "merge commit".
+
+---
+
+## 🔁 How Git Merge Works
+
+Example:
+
+main
+A --- B
+
+feature-login
+        C --- D
+
+If we run:
+
+git checkout main
+git merge feature-login
+
+After merge:
+
+main
+A --- B -------- M
+         \      /
+          C --- D
+
+M = Merge Commit
+
+The merge commit connects both histories together.
+
+---
+
+## ✅ Why Git Merge is Used
+
+- Safe and simple
+- Preserves complete history
+- Good for team collaboration
+- Default strategy in many projects
+
+---
+
+# 2️⃣ What is Git Rebase?
+
+Git rebase moves a branch to start from the latest commit of another branch.
+
+Instead of creating a merge commit, it rewrites commit history to make it linear.
+
+---
+
+## 🔁 How Git Rebase Works
+
+Before:
+
+main
+A --- B
+
+feature-login
+        C --- D
+
+Command:
+
+git checkout feature-login
+git rebase main
+
+After rebase:
+
+main
+A --- B
+
+feature-login
+          C' --- D'
+
+C and D are recreated as new commits (C' and D').
+
+History becomes clean and straight.
+
+---
+
+## ✅ Why Git Rebase is Used
+
+- Creates clean linear history
+- Makes git log easier to read
+- Looks more professional
+- Often used before merging to main
+
+---
+
+# 3️⃣ Git Merge vs Git Rebase
+
+| Feature | Merge | Rebase |
+|----------|--------|--------|
+| History | Preserves branch history | Rewrites history |
+| Extra Commit | Yes (merge commit) | No |
+| Safe for shared branches | Yes | Be careful |
+| Cleaner history | No | Yes |
+| Beginner friendly | Yes | Slightly advanced |
+
+---
+
+# 4️⃣ What are Merge Conflicts?
+
+A merge conflict occurs when two branches modify the same line of the same file and Git cannot decide which change to keep.
+
+Git stops the merge and asks the developer to resolve it manually.
+
+---
+
+## 🧠 Example Conflict
+
+Branch A:
+print("Hello Teja")
+
+Branch B:
+print("Hello DevOps")
+
+During merge, Git shows:
+
+<<<<<<< HEAD
+print("Hello Teja")
+=======
+print("Hello DevOps")
+>>>>>>> feature-login
+
+This is a conflict.
+
+---
+
+# 🔧 How to Resolve Merge Conflict
+
+Step 1: Open the conflicted file  
+Step 2: Decide which code to keep  
+Step 3: Remove conflict markers  
+Step 4: Save file  
+Step 5: Run:
+
+git add filename
+git commit
+
+Conflict resolved successfully.
+
+---
+
+# 5️⃣ Why Merge Conflicts Happen
+
+- Multiple developers editing same file
+- Working on outdated branches
+- Large teams
+- Lack of communication
+
+---
+
+# 6️⃣ How to Avoid Merge Conflicts
+
+- Pull latest changes before starting work
+- Use small feature branches
+- Commit frequently
+- Communicate with team
+- Keep branches updated
+
+---
+
+# 7️⃣ DevOps Perspective
+
+In DevOps:
+
+- git merge is commonly used with Pull Requests
+- git rebase is used to maintain clean history
+- Conflicts must be resolved before CI/CD pipeline runs
+- If conflicts exist, pipeline fails
+
+---
+
+# 🎯 Interview Summary
+
+Git Merge:
+Combines two branches and creates a merge commit.
+
+Git Rebase:
+Reapplies commits from one branch onto another to create linear history.
+
+Merge Conflict:
+Occurs when Git cannot automatically merge changes because the same lines were modified differently.
+
+---
+
+✅ End of Day 3 DevOps Notes
