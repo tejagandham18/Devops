@@ -169,3 +169,236 @@ DevOps is not limited to Linux, but Linux is widely used in production.
 ---
 
 ✅ End of Day 4 DevOps Notes
+
+# DevOps Day 5 Notes
+# Mandatory Docker Commands
+
+---
+
+# 1️⃣ Introduction
+
+Docker is a container platform used to build, run, and manage containers.
+
+In DevOps projects, we do not use all Docker commands.
+We mainly use a core set of essential commands daily.
+
+This document covers the most important Docker commands that every DevOps engineer must know.
+
+---
+
+# 2️⃣ Image Management Commands
+
+These commands are used to manage Docker images.
+
+---
+
+## 🔹 docker --version
+
+docker --version
+
+Purpose:
+Checks whether Docker is installed properly and displays the version.
+
+---
+
+## 🔹 docker pull
+
+docker pull nginx
+
+Purpose:
+Downloads an image from Docker Hub.
+Used when running ready-made applications.
+
+---
+
+## 🔹 docker images
+
+docker images
+
+Purpose:
+Lists all downloaded Docker images available locally.
+
+---
+
+## 🔹 docker build
+
+docker build -t myapp .
+
+Purpose:
+Builds a Docker image from a Dockerfile.
+Used to containerize custom applications.
+
+---
+
+# 3️⃣ Container Management Commands
+
+These commands are used to create, run, and manage containers.
+
+---
+
+## 🔹 docker run
+
+docker run nginx
+
+Purpose:
+Creates and starts a container from an image.
+
+---
+
+## 🔹 docker run -d
+
+docker run -d nginx
+
+Purpose:
+Runs a container in detached (background) mode.
+Used in production environments.
+
+---
+
+## 🔹 docker ps
+
+docker ps
+
+Purpose:
+Shows currently running containers.
+
+---
+
+## 🔹 docker ps -a
+
+docker ps -a
+
+Purpose:
+Shows all containers (running + stopped).
+
+---
+
+## 🔹 docker stop
+
+docker stop container_id
+
+Purpose:
+Stops a running container safely.
+
+---
+
+## 🔹 docker rm
+
+docker rm container_id
+
+Purpose:
+Removes (deletes) a stopped container.
+
+---
+
+# 4️⃣ Debugging & Monitoring Commands
+
+These commands help in troubleshooting containers.
+
+---
+
+## 🔹 docker logs
+
+docker logs container_id
+
+Purpose:
+Displays logs of a container.
+Used to debug application errors.
+
+---
+
+## 🔹 docker exec
+
+docker exec -it container_id bash
+
+Purpose:
+Accesses the running container terminal.
+Used for troubleshooting inside container.
+
+---
+
+## 🔹 docker system df
+
+docker system df
+
+Purpose:
+Displays Docker disk usage.
+Helps monitor storage usage.
+
+---
+
+# 5️⃣ Cleanup Commands
+
+These commands help free disk space.
+
+---
+
+## 🔹 docker rmi
+
+docker rmi image_name
+
+Purpose:
+Removes a Docker image.
+
+---
+
+## 🔹 docker system prune -a
+
+docker system prune -a
+
+Purpose:
+Removes unused containers, images, and networks.
+Used to clean up disk space.
+
+---
+
+# 6️⃣ Most Important Docker Commands (Top 10)
+
+These commands are most frequently used in DevOps:
+
+- docker pull
+- docker images
+- docker build
+- docker run
+- docker ps
+- docker stop
+- docker rm
+- docker logs
+- docker exec
+- docker system prune
+
+Mastering these commands allows handling most real-world Docker tasks.
+
+---
+
+# 7️⃣ Real DevOps Workflow Example
+
+Step 1: Build Image  
+docker build -t myapp .
+
+Step 2: Run Container  
+docker run -d -p 8080:80 myapp
+
+Step 3: Check Running Containers  
+docker ps
+
+Step 4: Check Logs  
+docker logs container_id
+
+Step 5: Stop Container  
+docker stop container_id
+
+---
+
+# 🎯 Interview Summary
+
+Docker is a container platform used in DevOps to build and manage containers.
+
+Mandatory Docker commands include:
+docker build, docker run, docker ps, docker stop, docker logs, docker exec, and docker system prune.
+
+These commands are used for building images, running containers, monitoring applications, and managing system resources.
+
+---
+
+✅ End of Day 5 DevOps Notes
