@@ -402,3 +402,298 @@ These commands are used for building images, running containers, monitoring appl
 ---
 
 ✅ End of Day 5 DevOps Notes
+
+# DevOps Day 6 Notes
+# Linux Basics, Namespaces, cgroups & Docker Architecture
+
+---
+
+# 1. How Linux Works
+
+Linux is an operating system that manages system hardware and runs applications.
+
+Linux architecture consists of several layers.
+Applications
+↓
+System Libraries
+↓
+Linux Kernel
+↓
+Hardware
+
+
+## Components
+
+### Applications
+Programs such as web servers, databases, browsers, and command-line tools.
+
+### System Libraries
+Provide functions that allow applications to communicate with the Linux kernel.
+
+### Linux Kernel
+The core part of the operating system that manages system resources.
+
+### Hardware
+Physical components such as CPU, memory, disk, and network devices.
+
+---
+
+# 2. Responsibilities of the Linux Kernel
+
+The Linux kernel manages the following:
+
+- Process management
+- Memory management
+- Device drivers
+- File systems
+- Networking
+- Resource allocation
+
+All applications interact with hardware through the kernel.
+
+---
+
+# 3. What is Linux Namespace
+
+A namespace provides **isolation for processes** in Linux.
+
+It ensures that processes running inside a container cannot see or affect processes outside that container.
+
+## Simple Definition
+
+A Linux namespace isolates system resources for a group of processes.
+
+This is one of the key technologies used to create containers.
+
+---
+
+## Example
+
+Without namespace:
+
+System  
+├── Process A  
+├── Process B  
+└── Process C  
+
+All processes can see each other.
+
+With namespace:
+
+Container 1  
+└── Process A  
+
+Container 2  
+└── Process B  
+
+Processes are isolated.
+
+---
+
+## Types of Namespaces
+
+| Namespace | Purpose |
+|----------|--------|
+| PID | Isolates process IDs |
+| NET | Isolates network interfaces |
+| MNT | Isolates file system mounts |
+| IPC | Isolates interprocess communication |
+| UTS | Isolates hostname and domain name |
+| USER | Isolates user and group IDs |
+
+---
+
+# 4. What is Linux cgroups
+
+cgroups stands for **Control Groups**.
+
+It is used to **limit and manage system resources** used by processes.
+
+## Simple Definition
+
+Linux cgroups control how much CPU, memory, disk, or network resources a process can use.
+
+---
+
+## Example
+
+Without cgroups:
+
+Container A uses 90% CPU  
+Container B gets very little CPU
+
+With cgroups:
+
+Container A limited to 50% CPU  
+Container B limited to 50% CPU
+
+Resources are distributed properly.
+
+---
+
+## Resources Controlled by cgroups
+
+- CPU usage
+- Memory usage
+- Disk I/O
+- Network bandwidth
+
+---
+
+# 5. Containers Use Namespaces and cgroups
+
+Containers rely on two Linux features:
+
+Namespaces → Process isolation  
+cgroups → Resource control
+
+Together they allow multiple containers to run safely on the same host system.
+
+---
+
+# 6. Docker Architecture
+
+Docker follows a **client-server architecture**.
+
+Main components:
+
+- Docker Client
+- Docker Daemon
+- Docker Host
+- Docker Images
+- Docker Containers
+- Docker Registry
+
+---
+
+# 7. Docker Client
+
+The Docker Client is the interface used to interact with Docker.
+
+Example commands:
+docker run nginx
+docker build .
+docker pull ubuntu
+
+
+The client sends commands to the Docker daemon.
+
+---
+
+# 8. Docker Daemon
+
+The Docker daemon (dockerd) runs in the background and manages Docker operations.
+
+Responsibilities include:
+
+- Building images
+- Running containers
+- Managing networks
+- Managing volumes
+- Communicating with Docker registries
+
+---
+
+# 9. Docker Host
+
+The Docker Host is the machine where Docker runs.
+
+It contains:
+
+- Docker daemon
+- Containers
+- Images
+- Networks
+- Volumes
+
+The host can be:
+
+- Local machine
+- Server
+- Cloud instance
+
+---
+
+# 10. Docker Images
+
+A Docker image is a blueprint used to create containers.
+
+Images include:
+
+- Application code
+- Libraries
+- Dependencies
+- Runtime environment
+
+Example images:
+
+- nginx
+- ubuntu
+- python
+
+Images are read-only templates.
+
+---
+
+# 11. Docker Containers
+
+A container is a running instance of a Docker image.
+
+Example:
+
+Image → Blueprint  
+Container → Running application
+
+Example command:
+docker run nginx
+
+
+---
+
+# 12. Docker Registry
+
+A Docker registry stores Docker images.
+
+The most popular registry is **Docker Hub**.
+
+Developers can:
+
+- Pull images
+- Push images
+- Share images
+
+Example commands:
+docker pull nginx
+docker push myimage
+
+
+---
+
+# 13. Docker Workflow
+
+When a container is started:
+
+1. User runs a command using Docker client
+2. Client sends request to Docker daemon
+3. Daemon checks if the image exists locally
+4. If not, it pulls the image from Docker registry
+5. Docker daemon creates the container
+6. Container starts running
+
+---
+
+# Interview Summary
+
+Linux Kernel manages system resources and hardware.
+
+Linux Namespaces provide process isolation.
+
+Linux cgroups control resource allocation such as CPU and memory.
+
+Docker uses namespaces and cgroups to run containers.
+
+Docker architecture consists of Docker Client, Docker Daemon, Docker Images, Containers, and Docker Registry.
+
+---
+
+End of Day 6 DevOps Notes
