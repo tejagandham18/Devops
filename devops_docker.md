@@ -697,3 +697,283 @@ Docker architecture consists of Docker Client, Docker Daemon, Docker Images, Con
 ---
 
 End of Day 6 DevOps Notes
+
+# DevOps Day 7 Notes
+# Docker Architecture & Dockerfile Commands
+
+---
+
+# 1. Docker Architecture
+
+Docker follows a **client–server architecture**.
+
+Main components:
+
+- Docker Client
+- Docker Daemon
+- Docker Host
+- Docker Images
+- Docker Containers
+- Docker Registry (Docker Hub)
+
+---
+
+## Docker Architecture Workflow
+
+When a user runs a command like:
+
+docker run nginx
+
+The following steps occur:
+
+1. The user runs the command in **Docker CLI (Docker Client)**.
+2. Docker Client sends a **REST API request** to the Docker Daemon.
+3. Docker Daemon checks if the **nginx image exists locally**.
+4. If the image is not available locally, Docker Daemon pulls it from **Docker Hub (Docker Registry)**.
+5. The image is downloaded and stored locally on the Docker host.
+6. Docker Daemon creates a **container from the image**.
+7. The container starts running the application.
+
+---
+
+## Docker Architecture Diagram
+
+User  
+↓  
+Docker CLI  
+↓  
+REST API Request  
+↓  
+Docker Daemon  
+↓  
+Check Local Images  
+↓  
+If Not Found → Docker Hub  
+↓  
+Image Downloaded  
+↓  
+Container Created  
+↓  
+Application Running
+
+---
+
+# 2. Dockerfile Commands
+
+Docker uses a **Dockerfile** to build container images.
+
+A Dockerfile contains instructions that define how an image should be built.
+
+---
+
+# 3. FROM
+
+## Purpose
+Defines the **base image** for building a Docker image.
+
+Every Dockerfile must begin with a FROM instruction.
+
+## Example
+
+FROM python:3.10
+
+## Explanation
+
+This tells Docker to use the Python 3.10 image as the base environment.
+
+---
+
+# 4. RUN
+
+## Purpose
+Executes commands during the **image build process**.
+
+Used to install packages or dependencies.
+
+## Example
+
+RUN apt-get update && apt-get install -y nginx
+
+## Explanation
+
+This command updates package lists and installs nginx inside the image.
+
+RUN commands execute **during image build time**, not during container runtime.
+
+---
+
+# 5. COPY
+
+## Purpose
+Copies files from the local machine into the Docker image.
+
+## Example
+
+COPY app.py /app/
+
+## Explanation
+
+Copies the file `app.py` from the host system to the `/app` directory inside the container.
+
+---
+
+# 6. ADD
+
+## Purpose
+Similar to COPY but with additional capabilities.
+
+## Example
+
+ADD app.tar.gz /app
+
+## Explanation
+
+ADD can:
+- Copy files from host
+- Extract compressed files automatically
+- Download files from URLs
+
+Best practice is to use COPY unless ADD features are required.
+
+---
+
+# 7. WORKDIR
+
+## Purpose
+Sets the working directory inside the container.
+
+## Example
+
+WORKDIR /app
+
+## Explanation
+
+All subsequent instructions will execute inside the `/app` directory.
+
+---
+
+# 8. EXPOSE
+
+## Purpose
+Specifies which port the container listens on.
+
+## Example
+
+EXPOSE 80
+
+## Explanation
+
+This tells Docker that the application inside the container runs on port 80.
+
+To access it from the host machine:
+
+docker run -p 8080:80 image_name
+
+---
+
+# 9. CMD
+
+## Purpose
+Defines the **default command executed when the container starts**.
+
+## Example
+
+CMD ["python", "app.py"]
+
+## Explanation
+
+When the container starts, it runs:
+
+python app.py
+
+Only one CMD instruction should be used in a Dockerfile.
+
+---
+
+# 10. ENTRYPOINT
+
+## Purpose
+Defines the **main command that always runs when the container starts**.
+
+## Example
+
+ENTRYPOINT ["python"]
+CMD ["app.py"]
+
+## Explanation
+
+This results in the container running:
+
+python app.py
+
+### Difference Between CMD and ENTRYPOINT
+
+| CMD | ENTRYPOINT |
+|-----|------------|
+Default command | Main container command |
+Can be overridden | Harder to override |
+Optional | Usually fixed |
+
+---
+
+# 11. docker exec -it
+
+This is a Docker CLI command used to access a running container.
+
+## Example
+
+docker exec -it container_id bash
+
+## Explanation
+
+- `-i` → Interactive mode
+- `-t` → Terminal access
+
+This command allows a user to open a terminal inside the running container for debugging or troubleshooting.
+
+---
+
+# 12. Example Dockerfile
+
+FROM python:3.10
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+
+---
+
+# 13. Summary
+
+Docker Architecture includes:
+
+- Docker Client
+- Docker Daemon
+- Docker Images
+- Docker Containers
+- Docker Registry
+
+Dockerfile Instructions:
+
+- FROM → Base image
+- RUN → Execute commands during build
+- COPY → Copy files into container
+- ADD → Copy files with extra features
+- WORKDIR → Set working directory
+- EXPOSE → Declare container port
+- CMD → Default startup command
+- ENTRYPOINT → Main container command
+
+Docker CLI Command:
+
+docker exec -it → Access running container.
+
+---
+
+End of Day 7 DevOps Notes
