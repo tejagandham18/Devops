@@ -381,4 +381,191 @@ Artifact (.jar)
 
 ---
 
-End of Day 9 Notes
+
+#  Compilation Process (Deep Dive)
+
+---
+
+# 1. What is Compilation?
+
+Compilation is the process of converting:
+
+Human-readable code → Machine-understandable code
+
+For Java:
+
+.java → .class
+
+---
+
+# 2. Key Tools Involved
+
+| Tool     | Role                          |
+|----------|-------------------------------|
+| Jenkins  | Automates the process         |
+| Maven    | Manages build lifecycle       |
+| javac    | Compiles the code (actual)    |
+
+---
+
+# 3. Important Concept
+
+Maven does NOT compile code directly.
+
+Maven → calls → javac → compiles code
+
+---
+
+# 4. Step-by-Step Compilation Flow
+
+## Step 1: Write Code
+
+Example:
+
+public class Hello {
+    public static void main(String[] args) {
+        System.out.println("Hello Teja");
+    }
+}
+
+File:
+Hello.java
+
+---
+
+## Step 2: Run Maven Command
+
+mvn clean install
+
+---
+
+## Step 3: Maven Reads Configuration
+
+Maven reads:
+
+pom.xml
+
+This file contains:
+- Project details
+- Dependencies
+- Build instructions
+
+---
+
+## Step 4: Maven Enters Compile Phase
+
+Build lifecycle:
+
+clean → compile → test → package → install
+
+---
+
+## Step 5: Maven Calls Java Compiler
+
+Maven internally invokes:
+
+javac
+
+---
+
+## Step 6: Compilation Happens
+
+Conversion:
+
+Hello.java → Hello.class
+
+---
+
+## Step 7: Output Stored
+
+Compiled files are stored in:
+
+target/classes/
+
+---
+
+# 5. Output Structure
+
+target/
+   ├── classes/        → .class files (compiled code)
+   ├── test-classes/
+   ├── *.jar           → final application
+
+---
+
+# 6. What is .class File?
+
+- Binary file (bytecode)
+- Executed by JVM (Java Virtual Machine)
+
+---
+
+# 7. Full Compilation Flow
+
+You write code (.java)
+        ↓
+Run mvn clean install
+        ↓
+Maven reads pom.xml
+        ↓
+Maven triggers compile phase
+        ↓
+Maven calls javac
+        ↓
+javac converts .java → .class
+        ↓
+Stored in target/classes
+
+---
+
+# 8. Role of Each Tool
+
+Jenkins:
+- Automates build process
+
+Maven:
+- Manages build lifecycle
+- Triggers compilation
+
+javac:
+- Actually compiles the code
+
+---
+
+# 9. Key Differences
+
+| Concept     | Description                  |
+|-------------|------------------------------|
+| Compilation | .java → .class               |
+| Packaging   | .class → .jar                |
+| Build       | Full process (all steps)     |
+
+---
+
+# 10. Important Commands
+
+Compile only:
+mvn compile
+
+Full build:
+mvn clean install
+
+---
+
+# 11. Interview Answer
+
+Compilation is the process of converting Java source code into bytecode using the Java compiler (javac). In Maven projects, the compile phase triggers javac to generate .class files, which are stored in the target/classes directory.
+
+---
+
+# 12. Summary
+
+- Compilation converts .java to .class
+- javac performs compilation
+- Maven triggers compilation
+- Jenkins automates the process
+- Output stored in target/classes
+
+---
+
+End of Day 9 - Compilation Notes
