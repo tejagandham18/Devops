@@ -568,4 +568,60 @@ Compilation is the process of converting Java source code into bytecode using th
 
 ---
 
-End of Day 9 - Compilation Notes
+# DevOps Day 10 - Code Review using Jenkins + PMD
+
+---
+
+## 1. What is Code Review?
+
+Code review is the process of checking code quality before merging it into the main branch.
+
+Types:
+- Manual Review → Done by developers  
+- Automated Review → Done using Jenkins + PMD  
+
+---
+
+## 2. Tools Used
+
+| Tool      | Role                          |
+|-----------|-------------------------------|
+| Jenkins   | Automation server             |
+| Maven     | Build tool                    |
+| PMD       | Static code analysis tool     |
+| GitHub    | Source code repository        |
+
+---
+
+## 3. What is PMD?
+
+PMD is a static code analysis tool that scans Java code for:
+
+- Unused variables  
+- Duplicate code  
+- Bad coding practices  
+- Code complexity issues  
+
+---
+
+## 4. Project Flow
+
+GitHub → Jenkins → Maven → PMD → Jenkins Dashboard
+
+---
+
+## 5. Implementation Steps
+
+### Step 1: Add PMD Plugin in `pom.xml`
+
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-pmd-plugin</artifactId>
+  <version>3.21.0</version>
+  <configuration>
+    <failOnViolation>false</failOnViolation>
+  </configuration>
+</plugin>   
+
+mvn clean install pmd:pmd
