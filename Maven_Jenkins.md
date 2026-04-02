@@ -205,3 +205,180 @@ Code → Git → Jenkins → Maven → Build → Test → Artifact → Deploy
 ---
 
 End of Day 8 DevOps Notes
+
+
+# DevOps Day 9 Notes
+# Jenkins, Maven Build & CI Pipeline
+
+---
+
+# 1. Jenkins Setup
+
+## What is Jenkins?
+Jenkins is an automation server used to implement CI/CD pipelines.
+
+---
+
+## Installation Steps
+
+1. Install Java 17
+2. Install Jenkins (.msi installer)
+3. Open Jenkins in browser:
+   http://localhost:8080
+4. Unlock Jenkins using:
+   C:\ProgramData\Jenkins\.jenkins\secrets\initialAdminPassword
+5. Install suggested plugins
+6. Create admin user
+
+---
+
+# 2. First Jenkins Job
+
+## Steps to Create Job
+
+1. Go to Jenkins Dashboard
+2. Click "New Item"
+3. Enter name:
+   my-first-job
+4. Select:
+   Freestyle Project
+5. Click OK
+
+---
+
+# 3. Configure Jenkins Job
+
+## Source Code Management
+
+Select:
+Git
+
+Repository URL:
+https://github.com/spring-projects/spring-petclinic.git
+
+---
+
+## Branch Configuration (Important)
+
+Default:
+*/master ❌
+
+Correct:
+*/main ✅
+
+Reason:
+New repositories use "main" instead of "master"
+
+---
+
+## Build Step
+
+Add build step:
+Invoke top-level Maven targets
+
+Goals:
+clean install
+
+---
+
+# 4. Running the Job
+
+1. Click "Build Now"
+2. Go to "Console Output"
+
+---
+
+## Expected Result
+
+BUILD SUCCESS
+
+---
+
+# 5. What Happens Internally
+
+Step-by-step flow:
+
+1. Jenkins connects to GitHub
+2. Downloads source code
+3. Runs Maven command:
+   mvn clean install
+4. Maven performs:
+   - Clean
+   - Compile
+   - Test
+   - Package
+5. Creates artifact:
+   target/*.jar
+6. Jenkins shows build result
+
+---
+
+# 6. CI Pipeline Explanation
+
+CI (Continuous Integration) means:
+
+Automatically building and testing code whenever changes are made.
+
+---
+
+## CI Pipeline Flow
+
+Code → GitHub → Jenkins → Maven → Build → Result
+
+---
+
+# 7. Tools Used
+
+| Tool    | Role                          |
+|--------|-------------------------------|
+| GitHub | Stores source code            |
+| Jenkins| Automates pipeline            |
+| Maven  | Builds application            |
+
+---
+
+# 8. Issue Faced & Fix
+
+## Error:
+Couldn't find any revision to build
+
+## Cause:
+Branch mismatch (master vs main)
+
+## Fix:
+Change branch:
+*/master → */main
+
+---
+
+# 9. Key Learnings
+
+- Jenkins job creation
+- Git integration with Jenkins
+- Maven build execution
+- CI pipeline basics
+- Debugging branch issues
+
+---
+
+# 10. DevOps Workflow (Current)
+
+GitHub
+   ↓
+Jenkins
+   ↓
+Maven Build
+   ↓
+Artifact (.jar)
+
+---
+
+# 11. Next Step (Upcoming)
+
+- Jenkins + Docker integration
+- Build Docker image from Jenkins
+- Run container using Jenkins
+
+---
+
+End of Day 9 Notes
