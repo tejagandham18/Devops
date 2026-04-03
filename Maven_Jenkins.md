@@ -791,3 +791,296 @@ mvn clean install -DskipTests
 * Failing tests stop deployment
 
 ---
+
+
+# 🚀 CI Pipeline using Jenkins + Maven (Windows)
+
+## 📌 Overview
+
+This document covers the complete CI pipeline implementation using:
+
+* Jenkins
+* Maven
+* GitHub
+* PMD (Code Review)
+* JUnit (Unit Testing)
+* JaCoCo (Code Coverage)
+
+---
+
+## 🔗 Project Setup
+
+### Source Code Repository
+
+* GitHub repository integrated with Jenkins
+* Jenkins pulls code using Git
+
+---
+
+## ⚙️ GitHub Configuration in Jenkins
+
+1. Install Plugins:
+
+   * Git Plugin
+   * GitHub Plugin
+
+2. Configure Git:
+
+   ```
+   Manage Jenkins → Global Tool Configuration
+   ```
+
+   Set path:
+
+   ```
+   C:\Program Files\Git\bin\git.exe
+   ```
+
+3. Configure Job:
+
+   * Source Code Management → Git
+   * Add repository URL
+
+---
+
+## 🏗️ Maven Build Lifecycle
+
+Maven executes phases in order:
+
+```
+validate → compile → test → verify → package
+```
+
+---
+
+## 🧪 Manual Commands (Step-by-Step)
+
+```bat
+mvn clean
+mvn validate
+mvn compile
+mvn pmd:pmd
+mvn test
+mvn jacoco:report
+mvn package
+```
+
+---
+
+## 🔥 Recommended Command (Industry Standard)
+
+```bat
+mvn clean verify
+```
+
+### What it does:
+
+* Cleans project
+* Compiles code
+* Runs unit tests
+* Performs code review (PMD)
+* Generates coverage (JaCoCo)
+* Packages application
+
+---
+
+## 🧰 Tools Used
+
+| Tool    | Purpose          |
+| ------- | ---------------- |
+| Maven   | Build automation |
+| Jenkins | CI orchestration |
+| PMD     | Code review      |
+| JUnit   | Unit testing     |
+| JaCoCo  | Code coverage    |
+
+---
+
+## 🧪 Unit Testing
+
+### Run tests:
+
+```bat
+mvn test
+```
+
+### Report location:
+
+```
+target/surefire-reports/
+```
+
+---
+
+## 📊 Code Coverage (JaCoCo)
+
+### Run:
+
+```bat
+mvn jacoco:report
+```
+
+### Report:
+
+```
+target/site/jacoco/index.html
+```
+
+---
+
+## 🔍 Code Review (PMD)
+
+### Run:
+
+```bat
+mvn pmd:pmd
+```
+
+### Report:
+
+```
+target/pmd.xml
+```
+
+---
+
+## 🔗 Jenkins Build Configuration (Windows)
+
+### Build Step:
+
+* Execute Windows batch command:
+
+```bat
+mvn clean verify
+```
+
+---
+
+## 📊 Post Build Actions
+
+### JUnit Report:
+
+```
+target/surefire-reports/*.xml
+```
+
+### PMD Report:
+
+```
+target/pmd.xml
+```
+
+### JaCoCo Coverage:
+
+```
+target/jacoco.exec
+```
+
+---
+
+## 🔄 CI Pipeline Flow
+
+1. Code pushed to GitHub
+2. Jenkins triggers build
+3. Code is cloned
+4. Maven runs lifecycle
+5. Reports are generated
+6. Build status displayed
+
+---
+
+## ⚠️ What Happens If Tests Fail?
+
+* Build becomes **FAILED**
+* Pipeline stops
+* Developer must fix the issue
+
+---
+
+## ⚔️ Shell vs Windows Commands
+
+| Linux         | Windows        |
+| ------------- | -------------- |
+| sh 'mvn test' | bat 'mvn test' |
+
+---
+
+## 🎯 Jenkins Pipeline (Manual Stages – Learning)
+
+```groovy
+stage('Validate') {
+    steps { bat 'mvn validate' }
+}
+stage('Compile') {
+    steps { bat 'mvn compile' }
+}
+stage('Code Review') {
+    steps { bat 'mvn pmd:pmd' }
+}
+stage('Unit Test') {
+    steps { bat 'mvn test' }
+}
+stage('Coverage') {
+    steps { bat 'mvn jacoco:report' }
+}
+stage('Package') {
+    steps { bat 'mvn package' }
+}
+```
+
+---
+
+## 🚀 Jenkins Pipeline (Recommended)
+
+```groovy
+stage('CI Pipeline') {
+    steps {
+        bat 'mvn clean verify'
+    }
+}
+```
+
+---
+
+## 📊 Pipeline Visualization
+
+### Plugins Used:
+
+* Pipeline Stage View
+* Blue Ocean
+
+### Where to View:
+
+* Jenkins → Job → Build → Stages
+* Blue Ocean Dashboard
+
+---
+
+## ⚠️ Important Concepts
+
+* Maven handles lifecycle automatically
+* Jenkins triggers and monitors pipeline
+* Plugins generate reports
+* Visualization depends on pipeline stages
+
+---
+
+## 🧠 Key Learnings
+
+* CI pipeline automates build and testing
+* `mvn clean verify` runs complete pipeline
+* PMD ensures code quality
+* JaCoCo measures test coverage
+* Jenkins displays reports and status
+* Pipeline visualization depends on stages
+
+---
+
+## 🚀 Next Steps
+
+* GitHub Webhooks (Auto Trigger)
+* SonarQube (Advanced Code Quality)
+* Docker Integration
+* Deployment to Cloud (AWS)
+
+---
