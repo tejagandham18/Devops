@@ -625,3 +625,169 @@ GitHub → Jenkins → Maven → PMD → Jenkins Dashboard
 </plugin>   
 
 mvn clean install pmd:pmd
+
+
+## 🧪 Unit Testing with Jenkins (Windows)
+
+### 📌 What is Unit Testing?
+
+Unit Testing is the process of testing individual components (methods/functions) to ensure they work correctly.
+
+#### Example:
+
+```java
+int add(int a, int b) {
+    return a + b;
+}
+```
+
+#### Test Case:
+
+```java
+assertEquals(5, add(2, 3));
+```
+
+---
+
+### 🎯 Why Unit Testing?
+
+* Detect bugs early
+* Improve code quality
+* Ensure reliability
+* Essential for CI/CD pipelines
+
+---
+
+### 🧰 Tools Used
+
+* **JUnit** → Writing test cases
+* **Maven** → Running tests
+* **Jenkins** → Automating execution
+
+---
+
+### ⚙️ Running Unit Tests (Windows)
+
+```bat
+mvn clean test
+```
+
+#### What Happens:
+
+1. Code compiles
+2. Tests are executed
+3. Reports are generated
+
+---
+
+### 📂 Test Report Location
+
+```
+target/surefire-reports/
+```
+
+* `.xml` → Used by Jenkins
+* `.txt` → Detailed logs
+
+---
+
+### 🔗 Jenkins Configuration
+
+#### 🔹 Build Step
+
+Use: **Execute Windows batch command**
+
+```bat
+mvn clean test
+```
+
+---
+
+#### 🔹 Post Build Action
+
+Use: **Publish JUnit test result report**
+
+```
+target/surefire-reports/*.xml
+```
+
+---
+
+### ⚠️ Common Errors
+
+#### ❌ No test reports found
+
+```
+target/surefire-reports/*.xml doesn't match anything
+```
+
+✔ Reason:
+
+* Build didn’t run
+* Tests didn’t execute
+
+---
+
+#### ❌ Git clone failed
+
+```
+Failed to connect to github.com port 443
+```
+
+✔ Fix:
+
+* Check internet
+* Configure proxy/firewall
+
+---
+
+### ⚔️ Shell vs Windows Commands
+
+| Linux         | Windows        |
+| ------------- | -------------- |
+| sh 'mvn test' | bat 'mvn test' |
+
+---
+
+### ❌ What Happens If Tests Fail?
+
+* Maven build fails
+* Jenkins marks build as **FAILED**
+* Pipeline stops
+
+---
+
+### 🛠️ How to Fix Failed Tests
+
+1. Check Jenkins console output
+2. Open test report
+3. Identify failing test
+4. Fix code/test
+5. Push changes
+6. Re-run pipeline
+
+---
+
+### ⚠️ Important Rule
+
+🚫 Never deploy code with failing tests
+
+---
+
+### 🟡 Optional (Not Recommended)
+
+```bat
+mvn clean install -DskipTests
+```
+
+---
+
+### 🧠 Key Takeaways
+
+* Unit testing ensures code quality
+* Maven executes tests
+* Jenkins automates testing
+* Reports are stored in `target/`
+* Failing tests stop deployment
+
+---
