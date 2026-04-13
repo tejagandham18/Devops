@@ -514,3 +514,131 @@ cat file.txt
 
 ➡️ Practice conditions and loops
 ➡️ Build small automation scripts
+
+
+# 🐚 Shell Scripting Commands Cheat Sheet (DevOps - Phase 1)
+
+## 📁 File & Directory Management
+
+* `ls -ltr` → List files with details & time
+* `cd` → Change directory
+* `pwd` → Show current directory
+* `mkdir` → Create directory
+* `touch` → Create file
+* `rm -rf` → Remove files/directories
+* `cp` → Copy files
+* `mv` → Move/rename files
+
+---
+
+## 📖 File Viewing & Editing
+
+* `cat` → View file content
+* `less` → View large files
+* `head` → First lines of file
+* `tail` → Last lines of file
+* `vim` / `vi` → Edit files
+
+---
+
+## 🔍 Filtering & Processing
+
+* `grep` → Search text
+* `awk` → Extract columns
+* `|` (pipe) → Chain commands
+
+### Example:
+
+```
+ps -ef | grep nginx | awk '{print $2}'
+```
+
+---
+
+## ⚙️ Process Management
+
+* `ps -ef` → List processes
+* `top` → Live process monitoring
+* `kill` → Stop process
+
+---
+
+## 💻 System Monitoring
+
+* `df -h` → Disk usage
+* `free -g` → Memory usage
+* `nproc` → CPU count
+
+---
+
+## 🌐 Networking
+
+* `curl` → API / URL check
+* `wget` → Download files
+
+---
+
+## 🔐 Permissions
+
+* `chmod` → Change permissions
+* `sudo` → Run as admin
+
+---
+
+## 🔎 File Search
+
+* `find` → Search files
+
+### Example:
+
+```
+find /var/log -name "*.log"
+```
+
+---
+
+## 🧠 Scripting Basics
+
+* `if` → Condition
+* `for` → Loop
+* `read` → Input
+* `echo` → Print output
+
+---
+
+## 🧪 Debugging & Safety
+
+* `set -x` → Debug mode
+* `set -e` → Exit on error
+* `set -o pipefail` → Catch pipe errors
+* `trap` → Handle interruptions
+
+---
+
+## 📜 History & Help
+
+* `history` → Command history
+* `man` → Manual/help
+
+---
+
+## 🚀 DevOps Core Commands (Important)
+
+* `systemctl` → Manage services
+* `ssh` → Connect to server
+* `scp` → Transfer files
+
+---
+
+## 🎯 Summary
+
+* `grep` → Filter data
+* `awk` → Extract data
+* `|` → Combine commands
+* `systemctl` → Manage services
+* `ssh` → Remote access
+
+---
+
+🔥 You are now Phase 1 (Linux + Shell Scripting) almost ready!
+
