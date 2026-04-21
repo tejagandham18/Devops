@@ -166,7 +166,160 @@ You are now at:
 
 🔥 **Docker Beginner → Intermediate Level**
 
+---  
+
+# 📦 Docker Multi-Container Setup (MongoDB + Mongo Express)
+
+## 🧠 Overview
+
+This setup demonstrates how to run **multiple containers** and allow them to communicate using a **Docker Network**.
+
+We use:
+
+* MongoDB → Database
+* Mongo Express → UI to access database
+
 ---
+
+## 🎯 Goal
+
+* Run MongoDB in a container
+* Run Mongo Express in another container
+* Connect both containers
+* Access Mongo Express from browser
+
+---
+
+## 🧱 Step 1: Create a Docker Network
+
+```bash
+docker network create mongo-network
+```
+
+### 🧠 Explanation:
+
+* Creates a private network
+* Containers inside this network can communicate with each other
+
+---
+
+## 🗄️ Step 2: Run MongoDB Container
+
+```bash
+docker run -d \
+--name mongodb \
+--network mongo-network \
+mongo
+```
+
+### 🧠 Explanation:
+
+* Starts MongoDB in a container
+* `--name mongodb` → container name
+* `--network mongo-network` → joins the network
+
+---
+
+## 🌐 Step 3: Run Mongo Express Container
+
+```bash
+docker run -d \
+--name mongo-express \
+--network mongo-network \
+-p 8081:8081 \
+-e ME_CONFIG_MONGODB_SERVER=mongodb \
+mongo-express
+```
+
+### 🧠 Explanation:
+
+* Runs Mongo Express UI
+* `-p 8081:8081` → access via browser
+* `-e ME_CONFIG_MONGODB_SERVER=mongodb` → connect to Mongo container
+
+---
+
+## 🔗 How Containers Communicate
+
+* Containers are in the same network
+* They use **container names** to communicate
+
+```text
+mongo-express → mongodb
+```
+
+---
+
+## 🌐 Access the Application
+
+Open in browser:
+
+```text
+http://localhost:8081
+```
+
+---
+
+## 🔍 Verify Running Containers
+
+```bash
+docker ps
+```
+
+---
+
+## 🧠 Important Concepts
+
+### 🔹 Docker Network
+
+* Enables communication between containers
+* Containers talk using names (not IP)
+
+### 🔹 Container Name
+
+* Acts as hostname inside network
+
+### 🔹 Port Mapping (`-p`)
+
+* Used to access container from your system
+* NOT used for container-to-container communication
+
+---
+
+## ⚠️ Key Difference
+
+| Feature     | Purpose                             |
+| ----------- | ----------------------------------- |
+| Network     | Container ↔ Container communication |
+| Port (`-p`) | System ↔ Container access           |
+
+---
+
+## 🧠 Final Understanding
+
+* Docker allows running multiple services as containers
+* Networking connects containers
+* Ports expose services to users
+
+---
+
+## 🚀 Outcome
+
+You have successfully:
+
+* Run multiple containers
+* Connected them using Docker network
+* Accessed application via browser
+
+---
+
+## 🎯 Next Step
+
+* Learn Docker Compose
+* Simplify multi-container setup using a single file
+
+---
+
 
 ## 🎯 Next Step
 
