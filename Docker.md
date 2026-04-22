@@ -329,3 +329,241 @@ You have successfully:
 
 ---
 
+# 📦 Docker Compose – Multi-Container Setup
+
+## 🧠 Overview
+
+Docker Compose is used to manage **multiple containers** using a single configuration file.
+
+Instead of running multiple `docker run` commands, we define everything in one file:
+
+```text
+docker-compose.yml
+```
+
+---
+
+## 🎯 Purpose
+
+* Run multiple services together
+* Simplify container management
+* Avoid long manual commands
+* Automatically handle networking
+
+---
+
+## 🧱 Basic Structure of docker-compose.yml
+
+```yaml
+version: '3'
+
+services:
+  service_name:
+    image:
+    container_name:
+    ports:
+    environment:
+```
+
+---
+
+## 🧠 Explanation of Each Section
+
+---
+
+### 🔹 1. Version
+
+```yaml
+version: '3'
+```
+
+* Defines the version of Docker Compose
+* Optional in newer versions
+
+---
+
+### 🔹 2. Services (Most Important)
+
+```yaml
+services:
+```
+
+* Main section of the file
+* Each service = one container
+
+---
+
+### 🔹 3. Service Name
+
+```yaml
+services:
+  mongodb:
+  mongo-express:
+```
+
+* Logical name of the container
+* Used for communication between containers
+
+---
+
+### 🔹 4. Image
+
+```yaml
+image: mongo
+```
+
+* Defines which Docker image to use
+* Equivalent to `docker run mongo`
+
+---
+
+### 🔹 5. Container Name
+
+```yaml
+container_name: mongodb
+```
+
+* Optional
+* Assigns a custom name to the container
+
+---
+
+### 🔹 6. Ports
+
+```yaml
+ports:
+  - "8081:8081"
+```
+
+* Maps host port to container port
+* Used to access application from browser
+
+---
+
+### 🔹 7. Environment Variables
+
+```yaml
+environment:
+  - KEY=VALUE
+```
+
+* Pass configuration values to container
+* Example:
+
+```yaml
+environment:
+  - ME_CONFIG_MONGODB_SERVER=mongodb
+```
+
+---
+
+## 🌐 Networking (Automatic 🔥)
+
+* Docker Compose automatically creates a network
+* All services are connected inside this network
+
+👉 No need to run:
+
+```bash
+docker network create
+```
+
+---
+
+## 🔗 Container Communication
+
+Containers communicate using **service names**
+
+```text
+mongo-express → mongodb
+```
+
+👉 Because both are in the same network
+
+---
+
+## 🚀 Running the Application
+
+```bash
+docker-compose up -d
+```
+
+### 🧠 What happens:
+
+* Reads YAML file
+* Pulls images
+* Creates containers
+* Creates network
+* Starts all services
+
+---
+
+## 🛑 Stopping the Application
+
+```bash
+docker-compose down
+```
+
+### 🧠 What happens:
+
+* Stops containers
+* Removes containers
+* Removes network
+
+---
+
+## 🔁 Workflow
+
+```text
+Write docker-compose.yml
+        ↓
+docker-compose up
+        ↓
+Containers start
+        ↓
+Services communicate
+        ↓
+Use application
+        ↓
+docker-compose down
+```
+
+---
+
+## ⚠️ Important Concepts
+
+| Feature     | Purpose                        |
+| ----------- | ------------------------------ |
+| services    | Defines containers             |
+| image       | Source of container            |
+| ports       | Access from browser            |
+| environment | Configuration                  |
+| network     | Auto-created for communication |
+
+---
+
+## 🧠 Final Understanding
+
+* Docker Compose = Blueprint for multi-container apps
+* Simplifies setup and management
+* Enables easy communication between services
+
+---
+
+## 🎯 Outcome
+
+You can now:
+
+* Define multiple containers in one file
+* Run full application with one command
+* Manage containers easily
+
+---
+
+## 🚀 Next Step
+
+* Practice modifying compose file
+* Learn Dockerfile
+* Build your own custom images
+
+---
