@@ -567,3 +567,522 @@ You can now:
 * Build your own custom images
 
 ---
+
+# 📦 Docker Learning Notes – Dockerfile & Docker Compose
+
+---
+
+# 🧠 Dockerfile – Building Our Own Docker Image
+
+## What is a Dockerfile?
+
+A Dockerfile is a **blueprint** used to build a Docker image.
+
+It contains instructions that Docker follows step-by-step to create a custom image.
+
+---
+
+## Why do we need Dockerfile?
+
+Before Dockerfile:
+
+* Use existing images like nginx, mongo
+* Run pre-built applications
+
+With Dockerfile:
+
+* Package our own application
+* Build our own custom image
+* Run application anywhere
+
+---
+
+## Basic Dockerfile Structure
+
+```dockerfile id="m1"
+FROM <base-image>
+
+WORKDIR <folder>
+
+COPY <source> <destination>
+
+CMD ["command"]
+```
+
+---
+
+## Dockerfile Instructions Explained
+
+---
+
+### 1. FROM
+
+```dockerfile id="m2"
+FROM python:3.10-slim
+```
+
+Purpose:
+
+Defines the base image.
+
+Meaning:
+
+Use an existing Python environment.
+
+Without this:
+
+Python will not exist inside container.
+
+---
+
+### 2. WORKDIR
+
+```dockerfile id="m3"
+WORKDIR /app
+```
+
+Purpose:
+
+Creates and sets the working directory inside container.
+
+Meaning:
+
+All files will be managed inside:
+
+```text id="m4"
+/app
+```
+
+---
+
+### 3. COPY
+
+```dockerfile id="m5"
+COPY app.py .
+```
+
+Purpose:
+
+Copies local files into Docker image.
+
+Before:
+
+Local system:
+
+```text id="m6"
+app.py
+```
+
+After:
+
+Inside image:
+
+```text id="m7"
+/app/app.py
+```
+
+---
+
+### 4. CMD
+
+```dockerfile id="m8"
+CMD ["python", "app.py"]
+```
+
+Purpose:
+
+Defines what command to run when container starts.
+
+Meaning:
+
+Runs:
+
+```bash id="m9"
+python app.py
+```
+
+automatically.
+
+---
+
+# Hands-on Project (Python Info App)
+
+Project structure:
+
+```text id="m10"
+python-info-app/
+ ├── app.py
+ └── Dockerfile
+```
+
+---
+
+## app.py
+
+```python id="q1x8mn"
+import socket
+import platform
+from datetime import datetime
+
+print("Current Time:", datetime.now())
+print("Hostname:", socket.gethostname())
+print("Python Version:", platform.python_version())
+```
+
+Purpose:
+
+Prints:
+
+* current time
+* hostname
+* python version
+
+---
+
+## Dockerfile
+
+```dockerfile id="m11"
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY app.py .
+
+CMD ["python", "app.py"]
+```
+
+---
+
+# Building Docker Image
+
+Command:
+
+```bash id="m12"
+docker build -t python-info:1.0 .
+```
+
+---
+
+## What happens internally?
+
+Step 1:
+
+Docker reads Dockerfile
+
+↓
+
+Step 2:
+
+Pulls base image (python)
+
+↓
+
+Step 3:
+
+Creates new layers
+
+↓
+
+Step 4:
+
+Copies app.py
+
+↓
+
+Step 5:
+
+Stores CMD instruction
+
+↓
+
+Creates final custom image
+
+---
+
+# Image Tagging
+
+Example:
+
+```text id="m13"
+python-info:1.0
+```
+
+Breakdown:
+
+```text id="m14"
+python-info → image name
+1.0         → image tag/version
+```
+
+Purpose:
+
+Used for versioning.
+
+Examples:
+
+```text id="m15"
+myapp:1.0
+myapp:2.0
+myapp:3.0
+```
+
+---
+
+# Running Container
+
+Command:
+
+```bash id="m16"
+docker run python-info:1.0
+```
+
+What happens:
+
+Docker creates a container from image and executes:
+
+```bash id="m17"
+python app.py
+```
+
+because CMD says so.
+
+---
+
+# Viewing Images
+
+Command:
+
+```bash id="m18"
+docker images
+```
+
+Purpose:
+
+Lists all available images.
+
+---
+
+# Viewing Logs
+
+Command:
+
+```bash id="m19"
+docker logs <container_id>
+```
+
+Purpose:
+
+Displays application output or errors.
+
+---
+
+# Entering Container
+
+Command:
+
+```bash id="m20"
+docker exec -it <container_id> /bin/sh
+```
+
+Purpose:
+
+Enter container shell for debugging.
+
+---
+
+# Dockerfile Layering Concept
+
+Docker images are built in layers.
+
+Example:
+
+Layer 1:
+
+```text id="m21"
+Base OS
+```
+
+Layer 2:
+
+```text id="m22"
+Python runtime
+```
+
+Layer 3:
+
+```text id="m23"
+Application code
+```
+
+Final:
+
+```text id="m24"
+Custom Docker image
+```
+
+---
+
+# Docker Compose Recap
+
+## What is Docker Compose?
+
+Docker Compose is used to manage multiple containers using one YAML file.
+
+Instead of:
+
+```bash id="m25"
+docker run ...
+docker run ...
+```
+
+Use:
+
+```text id="m26"
+docker-compose.yml
+```
+
+---
+
+## Basic Structure
+
+```yaml id="m27"
+version: '3'
+
+services:
+  service_name:
+    image:
+    container_name:
+    ports:
+    environment:
+```
+
+---
+
+## Important Sections
+
+---
+
+### version
+
+Defines compose version.
+
+---
+
+### services
+
+Defines all containers.
+
+Each service = one container.
+
+---
+
+### image
+
+Defines which image to use.
+
+---
+
+### container_name
+
+Custom container name.
+
+---
+
+### ports
+
+Maps host port to container port.
+
+Used for browser access.
+
+---
+
+### environment
+
+Passes configuration variables.
+
+---
+
+# Docker Compose Commands
+
+---
+
+## Start all services
+
+```bash id="m28"
+docker-compose up -d
+```
+
+What happens:
+
+* reads YAML file
+* creates containers
+* creates network
+* starts services
+
+---
+
+## Stop all services
+
+```bash id="m29"
+docker-compose down
+```
+
+What happens:
+
+* stops containers
+* removes containers
+* removes network
+
+---
+
+# Networking Concept
+
+Important:
+
+Docker Compose creates network automatically.
+
+Containers communicate using service names.
+
+Example:
+
+```text id="m30"
+mongo-express → mongodb
+```
+
+---
+
+# Important Difference
+
+| Feature | Purpose                             |
+| ------- | ----------------------------------- |
+| Network | Container ↔ Container communication |
+| Ports   | System ↔ Container communication    |
+
+---
+
+# What You Learned Today
+
+✅ Dockerfile basics
+✅ Build custom images
+✅ Run custom containers
+✅ Understand image tagging
+✅ Docker layering concept
+✅ Docker Compose basics
+✅ Multi-container management
+
+---
+
+# Current Docker Level
+
+🔥 Strong Docker Basics + Custom Image Building
+
+---
+
+# Next Step
+
+* Docker Volumes
+* Docker Registry
+* Push images to Docker Hub
+* Multi-stage builds
+
+---
