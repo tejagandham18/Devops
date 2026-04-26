@@ -1086,3 +1086,478 @@ mongo-express → mongodb
 * Multi-stage builds
 
 ---
+
+
+# 🚀 Phase 2 Final Project – Python Flask App + MongoDB (Dockerized)
+
+## 📌 Project Overview
+
+This project demonstrates how to containerize a **Python Flask application** and connect it with a **MongoDB database** using Docker.
+
+It covers all major Phase 2 Docker concepts:
+
+* Dockerfile
+* Custom image building
+* Docker Compose
+* Multi-container setup
+* Docker networking
+* Docker volumes
+* Database persistence
+
+---
+
+# 🧠 Project Architecture
+
+```text id="a1"
+Browser/API
+    ↓
+Python Flask App
+    ↓
+MongoDB Database
+```
+
+Application flow:
+
+```text id="a2"
+Client Request → Flask App → MongoDB → Response
+```
+
+---
+
+# 📂 Project Structure
+
+```text id="a3"
+python-mongo-app/
+ ├── app.py
+ ├── requirements.txt
+ ├── Dockerfile
+ └── docker-compose.yml
+```
+
+---
+
+# 🛠 Step 1: Create Project Directory
+
+```bash id="a4"
+mkdir python-mongo-app
+cd python-mongo-app
+```
+
+---
+
+# 🐍 Step 2: Create Flask Application
+
+Create:
+
+```bash id="a5"
+vim app.py
+```
+
+Paste:
+
+```python
+from flask import Flask, request, jsonify
+from pymongo import MongoClient
+
+app = Flask(__name__)
+
+client = MongoClient("mongodb://mongodb:27017/")
+db = client["usersdb"]
+collection = db["users"]
+
+@app.route("/")
+def home():
+    return "Python Mongo App Running"
+
+@app.route("/add", methods=["POST"])
+def add_user():
+    name = request.form.get("name")
+    collection.insert_one({"name": name})
+    return "User Added"
+
+@app.route("/users")
+def users():
+    users_list = []
+    for user in collection.find({}, {"_id": 0}):
+        users_list.append(user)
+    return jsonify(users_list)
+
+app.run(host="0.0.0.0", port=5000)
+```
+
+---
+
+## Application Endpoints
+
+| Endpoint | Method | Purpose          |
+| -------- | ------ | ---------------- |
+| `/`      | GET    | Check app status |
+| `/add`   | POST   | Add user         |
+| `/users` | GET    | View all users   |
+
+---
+
+# 📦 Step 3: Create Requirements File
+
+Create:
+
+```bash id="a6"
+vim requirements.txt
+```
+
+Paste:
+
+```text
+flask
+pymongo
+```
+
+---
+
+# 🐳 Step 4: Create Dockerfile
+
+Create:
+
+```bash id="a7"
+vim Dockerfile
+```
+
+Paste:
+
+```dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY app.py .
+
+CMD ["python", "app.py"]
+```
+
+---
+
+## Dockerfile Explanation
+
+### Base Image
+
+```dockerfile
+FROM python:3.10-slim
+```
+
+Uses Python runtime.
+
+---
+
+### Working Directory
+
+```dockerfile
+WORKDIR /app
+```
+
+Sets application directory.
+
+---
+
+### Copy Dependencies
+
+```dockerfile
+COPY requirements.txt .
+```
+
+Copies dependencies file.
+
+---
+
+### Install Dependencies
+
+```dockerfile
+RUN pip install -r requirements.txt
+```
+
+Installs Flask and PyMongo.
+
+---
+
+### Copy Application Code
+
+```dockerfile
+COPY app.py .
+```
+
+Copies application file.
+
+---
+
+### Run Application
+
+```dockerfile
+CMD ["python", "app.py"]
+```
+
+Starts Flask app.
+
+---
+
+# ⚙️ Step 5: Create Docker Compose File
+
+Create:
+
+```bash id="a8"
+vim docker-compose.yml
+```
+
+Paste:
+
+```yaml
+version: '3'
+
+services:
+  app:
+    build: .
+    container_name: python-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+```
+
+---
+
+## Docker Compose Explanation
+
+### App Service
+
+Builds Flask application image.
+
+---
+
+### MongoDB Service
+
+Uses official Mongo image.
+
+---
+
+### Depends On
+
+```yaml
+depends_on:
+  - mongodb
+```
+
+Ensures Mongo starts first.
+
+---
+
+### Volumes
+
+```yaml
+volumes:
+  - mongo-data:/data/db
+```
+
+Stores database data permanently.
+
+---
+
+# 🌐 Networking
+
+Docker Compose automatically creates a network.
+
+Containers communicate using service names.
+
+Mongo connection:
+
+```python
+MongoClient("mongodb://mongodb:27017/")
+```
+
+`mongodb` is the service name.
+
+---
+
+# 🚀 Step 6: Start Application
+
+```bash id="a9"
+docker-compose up -d
+```
+
+What happens:
+
+* Builds Flask image
+* Pulls Mongo image
+* Creates containers
+* Creates network
+* Creates volume
+* Starts services
+
+---
+
+# 🔍 Step 7: Verify Running Containers
+
+```bash id="a10"
+docker ps
+```
+
+Expected:
+
+* python-app
+* mongodb
+
+---
+
+# 🌐 Step 8: Test Application
+
+Open:
+
+```text id="a11"
+http://localhost:5000
+```
+
+Expected:
+
+```text
+Python Mongo App Running
+```
+
+---
+
+# ➕ Step 9: Add User
+
+Command:
+
+```bash id="a13"
+curl -X POST -d "name=Teja" http://localhost:5000/add
+```
+
+Expected:
+
+```text
+User Added
+```
+
+---
+
+# 👥 Step 10: View Users
+
+Open:
+
+```text id="a15"
+http://localhost:5000/users
+```
+
+Expected output:
+
+```json
+[
+  {"name":"Teja"}
+]
+```
+
+---
+
+# 💾 Step 11: Test Data Persistence
+
+Stop containers:
+
+```bash id="a16"
+docker-compose down
+```
+
+Start again:
+
+```bash id="a17"
+docker-compose up -d
+```
+
+Open:
+
+```text id="a18"
+http://localhost:5000/users
+```
+
+User data should still exist.
+
+This confirms volume persistence.
+
+---
+
+# 🛠 Useful Commands
+
+## View logs
+
+```bash
+docker logs python-app
+docker logs mongodb
+```
+
+---
+
+## Enter container
+
+```bash
+docker exec -it python-app /bin/sh
+```
+
+---
+
+## Stop project
+
+```bash
+docker-compose down
+```
+
+---
+
+# 🎯 Concepts Covered
+
+✅ Dockerfile
+✅ Custom Image Building
+✅ Docker Compose
+✅ Multi-container Setup
+✅ Docker Networking
+✅ Docker Volumes
+✅ MongoDB Integration
+✅ Container Communication
+✅ Data Persistence
+✅ Debugging
+
+---
+
+# 🚀 Outcome
+
+After completing this project, you will understand:
+
+* How to build custom Docker images
+* How to run multiple containers together
+* How applications communicate with databases
+* How volumes preserve data
+* How Docker Compose simplifies container management
+
+---
+
+# 📌 Next Phase
+
+Phase 3: CI/CD (Jenkins)
+
+Topics:
+
+* Jenkins setup
+* Pipeline creation
+* Build automation
+* Docker image automation
+
+---
