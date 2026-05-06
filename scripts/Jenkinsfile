@@ -9,21 +9,17 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                bat 'py -m pip install -r requirements.txt'
-            }
-        }
-
         stage('Code Quality Check') {
             steps {
-                bat 'py -m flake8 app.py'
+                bat 'docker run --rm -v %cd%:/app -w /app python:3.13 pip install flake8'
+                bat 'docker run --rm -v %cd%:/app -w /app python:3.13 flake8 app.py'
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat 'py -m pytest'
+                bat 'docker run --rm -v %cd%:/app -w /app python:3.13 pip install -r requirements.txt pytest'
+                bat 'docker run --rm -v %cd%:/app -w /app python:3.13 pytest'
             }
         }
 
