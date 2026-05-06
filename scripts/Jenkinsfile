@@ -9,6 +9,24 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                bat 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Code Quality Check') {
+            steps {
+                bat 'flake8 app.py'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                bat 'pytest'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 bat 'docker compose build'
@@ -20,6 +38,5 @@ pipeline {
                 bat 'docker compose up -d'
             }
         }
-
     }
 }
