@@ -921,3 +921,499 @@ Topics:
 ---
 
 # ✅ End of AWS Day 2 Notes
+
+
+# ☁️ AWS Day 3 Notes
+# Amazon S3 (Simple Storage Service)
+
+---
+
+# 📌 What is Amazon S3?
+
+S3 stands for:
+
+# Simple Storage Service
+
+Amazon S3 is an object storage service provided by AWS.
+
+It is used to store and retrieve any amount of data from anywhere over the internet.
+
+---
+
+## ✅ Simple Definition
+
+S3 is a cloud storage service used to store files such as:
+
+- Images
+- Videos
+- Logs
+- Backups
+- Static website files
+- Application data
+
+---
+
+# 🧠 Why S3 is Important
+
+S3 is one of the most widely used AWS services.
+
+It is used for:
+
+- Backup storage
+- Application logs
+- Jenkins artifacts
+- Static website hosting
+- Database backups
+- Terraform state files
+- Media storage
+
+---
+
+# 🪣 What is a Bucket?
+
+A Bucket is a container used to store objects/files in S3.
+
+---
+
+## Example
+
+```text
+teja-devops-backups
+```
+
+Inside the bucket:
+
+```text
+teja-devops-backups
+    ├── logs.txt
+    ├── backup.zip
+    ├── image.png
+```
+
+---
+
+# ⚠️ Important Rule
+
+Bucket names must be:
+
+- Globally unique
+- Lowercase only
+- No spaces allowed
+
+---
+
+# 📦 What is an Object?
+
+An Object is the actual file stored inside a bucket.
+
+Examples:
+
+- image.jpg
+- logs.txt
+- app.zip
+- database-backup.sql
+
+---
+
+# 🧱 S3 Structure
+
+```text
+Bucket
+   ├── Object 1
+   ├── Object 2
+   ├── Object 3
+```
+
+---
+
+# 🌍 Global Accessibility
+
+Buckets are created in a specific AWS Region.
+
+Example:
+
+- Mumbai
+- Singapore
+- US-East
+
+However, objects inside buckets can be accessed globally using:
+
+```text
+HTTP / HTTPS
+```
+
+---
+
+# Example URL
+
+```text
+https://bucket-name.s3.amazonaws.com/file.jpg
+```
+
+---
+
+# 💪 Scalability of S3
+
+Amazon S3 provides unlimited storage scalability.
+
+---
+
+## ✅ Important Points
+
+- No hard limit on total storage
+- Automatically scales
+- Single object size limit = 5 TB
+
+---
+
+# 🛡️ Durability of S3
+
+Amazon S3 is famous for:
+
+# 99.999999999% Durability
+
+This is called:
+
+# 11 Nines Durability
+
+---
+
+# ✅ Meaning
+
+The probability of losing data is extremely low.
+
+AWS stores multiple copies of data across infrastructure internally.
+
+---
+
+# 🧠 Simple Understanding
+
+If one storage device fails, your data still survives because AWS maintains multiple copies.
+
+---
+
+# 🔄 Durability vs Availability
+
+---
+
+## Durability
+
+```text
+Will my data survive?
+```
+
+Focuses on data safety.
+
+---
+
+## Availability
+
+```text
+Can I access my data right now?
+```
+
+Focuses on accessibility.
+
+---
+
+# 🔐 Security in S3
+
+AWS provides multiple security mechanisms for S3.
+
+---
+
+# 1️⃣ Bucket Policies
+
+Bucket Policies control access to buckets and objects.
+
+Policies are written in:
+
+```text
+JSON
+```
+
+---
+
+## Purpose
+
+- Allow access
+- Deny access
+- Restrict users
+
+---
+
+## Example
+
+Allow:
+
+```text
+Read access to objects
+```
+
+Deny:
+
+```text
+Delete access
+```
+
+---
+
+# 2️⃣ Access Control Lists (ACLs)
+
+ACLs provide object-level or bucket-level permissions.
+
+Used to control:
+
+- Read access
+- Write access
+
+---
+
+# 3️⃣ Encryption
+
+AWS provides Server-Side Encryption by default.
+
+Purpose:
+
+- Protect stored data
+- Improve security
+
+---
+
+# 🗂️ Storage Classes in S3
+
+S3 provides different storage classes based on:
+
+- Cost
+- Access frequency
+- Retrieval speed
+
+---
+
+# 1️⃣ S3 Standard
+
+Used for frequently accessed data.
+
+Examples:
+
+- Websites
+- Applications
+- Active data
+
+---
+
+# 2️⃣ S3 Glacier
+
+Low-cost storage for long-term archival.
+
+Used for:
+
+- Backups
+- Archive data
+- Rarely accessed files
+
+---
+
+# 🧠 Simple Understanding
+
+```text
+Frequently used data → S3 Standard
+Rarely used data → Glacier
+```
+
+---
+
+# 🔄 Versioning in S3
+
+Versioning allows storing multiple versions of the same object.
+
+---
+
+# Without Versioning
+
+```text
+file-v1
+   ↓ overwrite
+file-v2
+```
+
+Old file is lost.
+
+---
+
+# With Versioning
+
+```text
+file-v1
+file-v2
+file-v3
+```
+
+All versions are preserved.
+
+---
+
+# ✅ Benefits of Versioning
+
+- Prevent accidental deletion
+- Recover old files
+- Protect against overwrites
+
+---
+
+# 🌐 Static Website Hosting
+
+S3 can host static websites.
+
+---
+
+# Static Website Includes
+
+- HTML
+- CSS
+- JavaScript
+
+No backend server required.
+
+---
+
+# Steps for Static Website Hosting
+
+1. Create S3 bucket
+2. Upload website files
+3. Enable Static Website Hosting
+4. Configure bucket policy
+5. Access using public URL
+
+---
+
+# ⚠️ Public Access Block
+
+By default, S3 blocks public access for security.
+
+For website hosting:
+
+- Public access must be enabled carefully
+- Bucket policy must allow access
+
+---
+
+# 🧰 Common DevOps Use Cases of S3
+
+---
+
+# 1️⃣ Jenkins Build Artifacts
+
+Store:
+
+- Build packages
+- Deployment files
+- Logs
+
+---
+
+# 2️⃣ Database Backups
+
+Store backup files securely.
+
+---
+
+# 3️⃣ Application Logs
+
+Centralized log storage.
+
+---
+
+# 4️⃣ Terraform Remote State
+
+Terraform stores state files in S3.
+
+Very common DevOps use case.
+
+---
+
+# 5️⃣ Static Website Hosting
+
+Host frontend applications directly from S3.
+
+---
+
+# 🧠 Important Terms
+
+| Term | Meaning |
+|------|----------|
+| Bucket | Container used to store objects |
+| Object | Actual file stored in S3 |
+| Storage Class | Type of storage based on cost and access |
+| Versioning | Multiple versions of objects |
+| Bucket Policy | Access control mechanism |
+| ACL | Access Control List |
+| Glacier | Low-cost archival storage |
+
+---
+
+# 🎤 Interview Questions
+
+---
+
+## What is Amazon S3?
+
+Amazon S3 is an object storage service provided by AWS.
+
+---
+
+## What is a Bucket?
+
+A bucket is a container used to store objects/files in S3.
+
+---
+
+## What is an Object?
+
+An object is the actual file stored inside a bucket.
+
+---
+
+## What is Versioning?
+
+Versioning stores multiple versions of the same object.
+
+---
+
+## What is S3 Glacier?
+
+A low-cost storage class used for long-term archival.
+
+---
+
+## Difference Between Durability and Availability?
+
+### Durability
+Data survival.
+
+### Availability
+Data accessibility.
+
+---
+
+## What is Static Website Hosting in S3?
+
+Hosting HTML, CSS, and JavaScript websites directly from an S3 bucket.
+
+---
+
+# 🚀 Next Topic
+
+# AWS VPC (Virtual Private Cloud)
+
+Topics:
+
+- VPC
+- Subnets
+- Route Tables
+- Internet Gateway
+- NAT Gateway
+
+---
+
+# ✅ End of AWS Day 3 Notes
