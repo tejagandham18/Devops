@@ -1417,3 +1417,534 @@ Topics:
 ---
 
 # ✅ End of AWS Day 3 Notes
+
+# ☁️ AWS Day 4 Notes
+# AWS VPC (Virtual Private Cloud)
+
+---
+
+# 📌 What is VPC?
+
+VPC stands for:
+
+# Virtual Private Cloud
+
+A VPC is a private network inside AWS where you can launch and manage AWS resources securely.
+
+Inside a VPC, we can create:
+
+- EC2 Instances
+- Databases
+- Load Balancers
+- Applications
+- Kubernetes Clusters
+
+---
+
+# ✅ Simple Definition
+
+VPC is your own private network inside AWS.
+
+It gives you complete control over:
+
+- Networking
+- Security
+- Routing
+- Internet access
+
+---
+
+# 🏘️ Real-World Analogy
+
+Imagine AWS as a:
+
+# Big City
+
+Inside this city, your company gets a:
+
+# Private Gated Community
+
+That private area is your:
+
+# VPC
+
+Inside the gated community, you can create:
+
+- Buildings
+- Roads
+- Security Gates
+- Traffic Rules
+
+Similarly, inside a VPC we configure:
+
+- Subnets
+- Route Tables
+- Security Groups
+- Internet Gateways
+
+---
+
+# 🎯 Why VPC is Important
+
+Without VPC:
+
+- Everything becomes public
+- No network isolation
+- Security risks increase
+
+With VPC:
+
+✅ Secure environment  
+✅ Private networking  
+✅ Controlled internet access  
+✅ Better cloud architecture
+
+---
+
+# 🌐 IP Addressing in VPC
+
+When creating a VPC, we define an IP range.
+
+Example:
+
+```text
+10.0.0.0/16
+```
+
+This is called:
+
+# CIDR Block
+
+---
+
+# 🧠 What is CIDR?
+
+CIDR defines:
+
+```text
+How many IP addresses are available in the VPC
+```
+
+---
+
+# ✅ Simple Understanding
+
+CIDR block acts like the size of land allocated for your network.
+
+Larger CIDR block:
+
+```text
+More IP addresses available
+```
+
+---
+
+# 🧱 What are Subnets?
+
+Subnets are smaller sections inside a VPC.
+
+---
+
+# Example
+
+```text
+VPC → 10.0.0.0/16
+
+   ├── Public Subnet
+   │      10.0.1.0/24
+   │
+   └── Private Subnet
+          10.0.2.0/24
+```
+
+---
+
+# 🎯 Why Subnets are Used
+
+Subnets help in:
+
+- Organizing infrastructure
+- Improving security
+- Isolating resources
+- Managing traffic efficiently
+
+---
+
+# 🌍 Public Subnet
+
+A Public Subnet is accessible from the internet.
+
+Resources inside a public subnet can:
+
+✅ Receive internet traffic  
+✅ Communicate with internet
+
+---
+
+# Examples of Public Subnet Resources
+
+- Web Servers
+- Jenkins Servers
+- Load Balancers
+
+These services must be accessible publicly.
+
+---
+
+# 🔒 Private Subnet
+
+A Private Subnet is NOT directly accessible from the internet.
+
+Resources inside private subnet remain hidden.
+
+---
+
+# Examples of Private Subnet Resources
+
+- Databases
+- Backend Services
+- Internal Applications
+
+---
+
+# 🎯 Why Private Subnets are Important
+
+Private subnets improve security.
+
+Sensitive services like databases should never be exposed publicly.
+
+---
+
+# 🌐 Internet Gateway (IGW)
+
+Internet Gateway acts as a bridge between:
+
+```text
+VPC ↔ Internet
+```
+
+---
+
+# ✅ Purpose of Internet Gateway
+
+Allows resources inside public subnets to access the internet.
+
+Without Internet Gateway:
+
+❌ No internet connectivity
+
+---
+
+# 📌 Flow
+
+```text
+Internet
+    ↓
+Internet Gateway
+    ↓
+Public Subnet
+```
+
+---
+
+# 🗺️ Route Tables
+
+Route Tables control network traffic inside VPC.
+
+They decide:
+
+```text
+Where traffic should go
+```
+
+---
+
+# 🧠 Simple Analogy
+
+Route Table acts like:
+
+# Google Maps for Network Traffic
+
+---
+
+# Example
+
+```text
+Destination → Internet Gateway
+```
+
+Meaning:
+
+Internet traffic should go through the Internet Gateway.
+
+---
+
+# 🔥 Security Groups
+
+Security Groups act as:
+
+# Virtual Firewalls
+
+They control:
+
+- Inbound Traffic
+- Outbound Traffic
+- Port Access
+
+---
+
+# Common Ports
+
+| Port | Purpose |
+|------|----------|
+| 22 | SSH |
+| 80 | HTTP |
+| 443 | HTTPS |
+| 8080 | Jenkins |
+
+---
+
+# 🎯 Purpose of Security Groups
+
+Control who can access EC2 instances.
+
+Example:
+
+Allow:
+
+- SSH Access
+- Web Traffic
+
+Block:
+
+- Unauthorized access
+
+---
+
+# ⚖️ Load Balancer
+
+A Load Balancer distributes incoming traffic across multiple servers.
+
+---
+
+# Why Load Balancer is Needed
+
+Suppose:
+
+```text
+1000 users open website
+```
+
+One server may crash due to high load.
+
+Load Balancer distributes requests across multiple servers.
+
+---
+
+# Example
+
+```text
+Users
+   ↓
+Load Balancer
+ ↙   ↓   ↘
+S1   S2   S3
+```
+
+---
+
+# ✅ Benefits
+
+- High Availability
+- Better Performance
+- Fault Tolerance
+- Scalability
+
+---
+
+# 🌐 NAT Gateway
+
+NAT Gateway allows instances inside a private subnet to access the internet securely.
+
+---
+
+# 🧠 Problem Scenario
+
+Database server inside private subnet needs:
+
+- Software updates
+- Internet downloads
+
+But:
+
+❌ Database should NOT be publicly accessible
+
+---
+
+# ✅ Solution
+
+Use:
+
+# NAT Gateway
+
+---
+
+# 📌 Flow
+
+```text
+Private Subnet
+      ↓
+NAT Gateway
+      ↓
+Internet
+```
+
+---
+
+# 🎯 Important Understanding
+
+Using NAT Gateway:
+
+✅ Private instances can access internet  
+❌ Internet cannot directly access private instances
+
+---
+
+# 📊 VPC Flow Logs
+
+VPC Flow Logs capture network traffic information.
+
+Used for:
+
+- Monitoring
+- Troubleshooting
+- Security Analysis
+
+---
+
+# ✅ Use Cases
+
+- Detect suspicious traffic
+- Debug connectivity issues
+- Analyze network communication
+
+---
+
+# 🏗️ Real-World AWS Architecture
+
+Typical production architecture:
+
+```text
+Internet
+    ↓
+Load Balancer
+    ↓
+Public Subnet
+    ↓
+Application Servers
+    ↓
+Private Subnet
+    ↓
+Database
+```
+
+---
+
+# 🎯 Why This Architecture is Used
+
+Because:
+
+✅ Web servers should be public  
+✅ Databases should remain private
+
+This improves security and scalability.
+
+---
+
+# 🧠 Important Terms
+
+| Term | Meaning |
+|------|----------|
+| VPC | Private network inside AWS |
+| CIDR Block | IP address range |
+| Subnet | Smaller section inside VPC |
+| Public Subnet | Internet accessible subnet |
+| Private Subnet | Internal secure subnet |
+| Internet Gateway | Connects VPC to internet |
+| Route Table | Controls traffic routing |
+| Security Group | Firewall for EC2 |
+| NAT Gateway | Secure internet access for private subnet |
+| VPC Flow Logs | Network traffic monitoring logs |
+
+---
+
+# 🎤 Interview Questions
+
+---
+
+## What is VPC?
+
+VPC is a private network inside AWS used to launch and manage cloud resources securely.
+
+---
+
+## What is a Subnet?
+
+A subnet is a smaller network section inside a VPC.
+
+---
+
+## Difference Between Public and Private Subnet?
+
+### Public Subnet
+Internet accessible.
+
+### Private Subnet
+Not directly accessible from internet.
+
+---
+
+## What is Internet Gateway?
+
+Internet Gateway connects a VPC to the internet.
+
+---
+
+## What is a Route Table?
+
+Route Table controls how network traffic moves inside a VPC.
+
+---
+
+## What is NAT Gateway?
+
+NAT Gateway allows private subnet resources to access internet securely.
+
+---
+
+## What is the purpose of Security Groups?
+
+Security Groups act as firewalls controlling inbound and outbound traffic.
+
+---
+
+## What are VPC Flow Logs?
+
+VPC Flow Logs record network traffic information for monitoring and troubleshooting.
+
+---
+
+# 🚀 Next Topic
+
+# AWS CLI (Command Line Interface)
+
+Topics:
+
+- AWS CLI Installation
+- Configure AWS CLI
+- Access AWS Services using Terminal
+- Automation using CLI
+
+---
+
+# ✅ End of AWS Day 4 Notes
