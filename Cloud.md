@@ -1948,3 +1948,444 @@ Topics:
 ---
 
 # ✅ End of AWS Day 4 Notes
+
+
+# ☁️ AWS Day 5 Notes
+# AWS CLI (Command Line Interface)
+
+---
+
+# 📌 What is AWS CLI?
+
+AWS CLI stands for:
+
+# AWS Command Line Interface
+
+AWS CLI is a command-line tool that allows users to interact with AWS services using terminal commands instead of using the AWS Management Console (UI).
+
+---
+
+# ✅ Simple Definition
+
+AWS CLI allows DevOps engineers to manage AWS resources programmatically using commands.
+
+---
+
+# 🧠 Why AWS CLI is Important
+
+AWS Console (UI) is easy for beginners but not suitable for automation.
+
+For large-scale infrastructure management:
+
+❌ Clicking buttons manually becomes difficult  
+❌ Operations become repetitive  
+❌ Infrastructure management becomes slow
+
+---
+
+# ✅ Solution
+
+Use:
+
+# AWS CLI
+
+---
+
+# 🎯 Benefits of AWS CLI
+
+- Faster operations
+- Automation friendly
+- Scriptable
+- Easy integration with CI/CD
+- Useful for DevOps workflows
+
+---
+
+# 🖥️ AWS Console vs AWS CLI
+
+| AWS Console | AWS CLI |
+|-------------|----------|
+| GUI Based | Command Based |
+| Manual Operations | Automation Friendly |
+| Good for Learning | Good for DevOps |
+| Slow for Large Infrastructure | Fast and Efficient |
+
+---
+
+# 🔌 What is an API?
+
+API stands for:
+
+# Application Programming Interface
+
+An API allows applications or tools to communicate programmatically.
+
+---
+
+# 🧠 Simple Understanding
+
+When users click buttons in AWS Console:
+
+```text
+AWS APIs are called internally
+```
+
+---
+
+# 🎯 Role of AWS CLI
+
+AWS CLI acts like a translator.
+
+---
+
+# 📌 Flow
+
+```text
+User Command
+     ↓
+AWS CLI
+     ↓
+AWS API Calls
+     ↓
+AWS Service
+```
+
+---
+
+# Example
+
+Command:
+
+```bash
+aws s3 ls
+```
+
+AWS CLI internally converts this into:
+
+```text
+S3 API Request
+```
+
+and fetches bucket information.
+
+---
+
+# 🛠️ Why DevOps Engineers Use AWS CLI
+
+AWS CLI helps in:
+
+- Automation
+- Shell scripting
+- CI/CD pipelines
+- Infrastructure management
+- Monitoring tasks
+
+---
+
+# ⚖️ AWS CLI vs Infrastructure as Code (IaC)
+
+---
+
+# AWS CLI
+
+Used for:
+
+- Quick operations
+- Daily resource management
+- Temporary tasks
+
+Examples:
+
+- List buckets
+- Check EC2 status
+- Upload files
+
+---
+
+# Infrastructure as Code (Terraform / CloudFormation)
+
+Used for:
+
+- Full infrastructure automation
+- Production deployments
+- Complete cloud architecture setup
+
+---
+
+# 🧠 Simple Understanding
+
+## AWS CLI
+
+```text
+Quick Commands
+```
+
+---
+
+## Terraform
+
+```text
+Complete Infrastructure Automation
+```
+
+---
+
+# 💻 AWS CLI Installation
+
+AWS CLI can be installed on:
+
+- Windows
+- Linux
+- macOS
+
+---
+
+# Verify Installation
+
+Command:
+
+```bash
+aws --version
+```
+
+---
+
+# ⚙️ Configuring AWS CLI
+
+Important command:
+
+```bash
+aws configure
+```
+
+---
+
+# During Configuration AWS CLI Asks For:
+
+- AWS Access Key ID
+- AWS Secret Access Key
+- Default Region
+- Output Format
+
+---
+
+# 🔐 Why Configuration is Required
+
+AWS CLI must authenticate with your AWS account before accessing resources.
+
+---
+
+# 🔑 Access Key ID & Secret Access Key
+
+These credentials are generated using IAM users.
+
+They act like:
+
+```text
+Username + Password for AWS CLI
+```
+
+---
+
+# ⚠️ Important Security Rule
+
+❌ Never share Secret Access Key  
+❌ Never upload credentials to GitHub
+
+Very important DevOps practice.
+
+---
+
+# 🔥 Common AWS CLI Commands
+
+---
+
+# 1️⃣ List S3 Buckets
+
+```bash
+aws s3 ls
+```
+
+---
+
+# 2️⃣ List EC2 Instances
+
+```bash
+aws ec2 describe-instances
+```
+
+---
+
+# 3️⃣ Create S3 Bucket
+
+```bash
+aws s3 mb s3://my-bucket
+```
+
+---
+
+# 4️⃣ Upload File to S3
+
+```bash
+aws s3 cp file.txt s3://bucket-name
+```
+
+---
+
+# 5️⃣ Download File from S3
+
+```bash
+aws s3 cp s3://bucket-name/file.txt .
+```
+
+---
+
+# 🧰 AWS CLI in DevOps
+
+AWS CLI is commonly used in:
+
+- Jenkins Pipelines
+- Shell Scripts
+- Deployment Automation
+- Monitoring Scripts
+- Terraform Workflows
+
+---
+
+# 🚀 Real DevOps Example
+
+Suppose Jenkins builds an application.
+
+Then pipeline uploads build artifact to S3:
+
+```bash
+aws s3 cp build.zip s3://artifacts-bucket
+```
+
+This is real DevOps automation using AWS CLI.
+
+---
+
+# 📚 AWS CLI Documentation
+
+Very important point:
+
+❌ Do NOT try to memorize all commands.
+
+Even experienced engineers use documentation regularly.
+
+---
+
+# AWS CLI Command Reference
+
+AWS provides official documentation for:
+
+- EC2 commands
+- S3 commands
+- IAM commands
+- VPC commands
+
+---
+
+# 🎯 Best Practice
+
+Instead of memorizing:
+
+✅ Understand concepts  
+✅ Practice commands  
+✅ Learn how to read documentation
+
+---
+
+# 🧠 Important Terms
+
+| Term | Meaning |
+|------|----------|
+| AWS CLI | Command-line tool for AWS |
+| API | Programmatic communication interface |
+| aws configure | Configure AWS credentials |
+| Access Key | Authentication credential |
+| Secret Key | Secure authentication key |
+| Automation | Main purpose of CLI |
+| IaC | Infrastructure as Code |
+
+---
+
+# 🎤 Interview Questions
+
+---
+
+## What is AWS CLI?
+
+AWS CLI is a command-line tool used to manage AWS services programmatically.
+
+---
+
+## Why is AWS CLI important in DevOps?
+
+AWS CLI helps automate AWS operations and integrates easily with CI/CD pipelines.
+
+---
+
+## What is an API?
+
+API is an interface that allows applications and tools to communicate programmatically.
+
+---
+
+## What is the purpose of aws configure?
+
+Used to configure AWS credentials and default settings.
+
+---
+
+## Difference Between AWS Console and AWS CLI?
+
+### AWS Console
+GUI-based manual management.
+
+### AWS CLI
+Command-based automation-friendly management.
+
+---
+
+## Difference Between AWS CLI and Terraform?
+
+### AWS CLI
+Used for quick commands and operations.
+
+### Terraform
+Used for complete infrastructure automation.
+
+---
+
+# 🏗️ Real DevOps Flow
+
+```text
+Developer
+    ↓
+AWS CLI Commands
+    ↓
+AWS APIs
+    ↓
+AWS Resources
+```
+
+---
+
+# 🚀 Next Topic
+
+# Deploy Flask + Docker Application on EC2
+
+Topics:
+
+- Launch EC2
+- Install Docker
+- Pull Application
+- Run Containers
+- Configure Security Groups
+- Access Application Publicly
+
+---
+
+# ✅ End of AWS Day 5 Notes
