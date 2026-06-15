@@ -470,3 +470,671 @@ Status:
 ```text
 Terraform Day 1 Complete ✅
 ```
+
+# Terraform Zero to Hero - Day 2 Notes
+
+# Overview
+
+Day 2 focuses on writing reusable and production-ready Terraform code.
+
+Key Topics:
+
+* Providers
+* Variables
+* Outputs
+* Project Structure
+* Terraform TFVars
+* Conditional Expressions
+* Built-in Functions
+
+---
+
+# 1. Providers
+
+## What is a Provider?
+
+A Provider is a plugin that allows Terraform to communicate with a platform such as AWS, Azure, GCP, Docker, or Kubernetes.
+
+Example:
+
+```hcl
+provider "aws" {
+  region = "ap-south-1"
+}
+```
+
+Architecture:
+
+```text
+Terraform
+    │
+    ▼
+AWS Provider
+    │
+    ▼
+AWS API
+    │
+    ▼
+AWS Resources
+```
+
+---
+
+## Why Providers?
+
+Terraform itself cannot create AWS resources.
+
+It needs a provider to:
+
+* Authenticate with AWS
+* Communicate with AWS APIs
+* Create and manage AWS resources
+
+---
+
+## Multi Region Provider Example
+
+```hcl
+provider "aws" {
+  region = "ap-south-1"
+}
+
+provider "aws" {
+  alias  = "singapore"
+  region = "ap-southeast-1"
+}
+```
+
+Purpose:
+
+```text
+Mumbai Resources
+Singapore Resources
+```
+
+using the same Terraform project.
+
+---
+
+# 2. Variables
+
+## What is a Variable?
+
+Variables are used to avoid hardcoded values and make Terraform code reusable.
+
+Without Variables:
+
+```hcl
+instance_type = "t3.micro"
+```
+
+Problem:
+
+Every environment requires code changes.
+
+---
+
+## Variable Declaration
+
+File:
+
+```text
+variables.tf
+```
+
+Example:
+
+```hcl
+variable "instance_type" {
+  description = "EC2 Instance Type"
+}
+```
+
+Meaning:
+
+```text
+Terraform, I need a variable called instance_type.
+The value will be provided later.
+```
+
+---
+
+## Variable Usage
+
+Example:
+
+```hcl
+resource "aws_instance" "server" {
+
+  instance_type = var.instance_type
+
+}
+```
+
+Terraform reads:
+
+```text
+var.instance_type
+```
+
+and replaces it with the actual value.
+
+---
+
+# 3. Terraform TFVars
+
+## What is terraform.tfvars?
+
+The terraform.tfvars file contains the actual values for variables.
+
+Example:
+
+File:
+
+```text
+terraform.tfvars
+```
+
+Content:
+
+```hcl
+instance_type = "t3.micro"
+```
+
+Meaning:
+
+```text
+Variable Name
+      ↓
+instance_type
+      ↓
+Value
+      ↓
+t3.micro
+```
+
+---
+
+## Why Use TFVars?
+
+Different environments need different values.
+
+Example:
+
+### Development
+
+```hcl
+instance_type = "t3.micro"
+```
+
+### Production
+
+```hcl
+instance_type = "t3.large"
+```
+
+Same Terraform code.
+
+Different values.
+
+---
+
+## Real Company Structure
+
+```text
+dev.tfvars
+qa.tfvars
+prod.tfvars
+```
+
+Usage:
+
+```bash
+terraform apply -var-file=prod.tfvars
+```
+
+---
+
+# Variables vs TFVars
+
+## variables.tf
+
+Used to declare variables.
+
+Example:
+
+```hcl
+variable "instance_type" {}
+```
+
+---
+
+## terraform.tfvars
+
+Used to assign values.
+
+Example:
+
+```hcl
+instance_type = "t3.micro"
+```
+
+---
+
+# 4. Outputs
+
+## What is an Output?
+
+Outputs display useful information after Terraform creates resources.
+
+Example:
+
+```hcl
+output "public_ip" {
+
+  value = aws_instance.server.public_ip
+
+}
+```
+
+After:
+
+```bash
+terraform apply
+```
+
+Output:
+
+```text
+public_ip = 3.110.118.137
+```
+
+---
+
+## Why Outputs?
+
+Without Output:
+
+```text
+Open AWS Console
+Copy Public IP
+```
+
+With Output:
+
+```text
+Terraform prints it automatically
+```
+
+Useful for automation.
+
+---
+
+# 5. Project Structure
+
+## Beginner Structure
+
+```text
+main.tf
+```
+
+Everything inside one file.
+
+Works for learning.
+
+Not recommended for production.
+
+---
+
+## Professional Structure
+
+```text
+terraform-project
+│
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── main.tf
+└── outputs.tf
+```
+
+---
+
+## provider.tf
+
+Contains:
+
+```hcl
+provider "aws" {
+  region = "ap-south-1"
+}
+```
+
+Purpose:
+
+```text
+AWS Connection Configuration
+```
+
+---
+
+## variables.tf
+
+Contains:
+
+```hcl
+variable "instance_type" {}
+```
+
+Purpose:
+
+```text
+Variable Declaration
+```
+
+---
+
+## terraform.tfvars
+
+Contains:
+
+```hcl
+instance_type = "t3.micro"
+```
+
+Purpose:
+
+```text
+Variable Values
+```
+
+---
+
+## main.tf
+
+Contains:
+
+```hcl
+resource "aws_instance" "server" {
+
+}
+```
+
+Purpose:
+
+```text
+Infrastructure Resources
+```
+
+---
+
+## outputs.tf
+
+Contains:
+
+```hcl
+output "public_ip" {
+
+}
+```
+
+Purpose:
+
+```text
+Display Useful Information
+```
+
+---
+
+# Complete Flow
+
+```text
+variables.tf
+     ↓
+Declare Variables
+
+terraform.tfvars
+     ↓
+Provide Values
+
+main.tf
+     ↓
+Create Infrastructure
+
+outputs.tf
+     ↓
+Display Results
+```
+
+---
+
+# 6. Conditional Expressions
+
+Terraform supports IF-ELSE logic using:
+
+```hcl
+condition ? value1 : value2
+```
+
+---
+
+## Syntax
+
+```hcl
+var.environment == "prod"
+? "t3.large"
+: "t3.micro"
+```
+
+Read as:
+
+```text
+IF environment = prod
+    Use t3.large
+ELSE
+    Use t3.micro
+```
+
+---
+
+## Example 1
+
+```hcl
+environment = "prod"
+```
+
+Result:
+
+```text
+t3.large
+```
+
+---
+
+## Example 2
+
+```hcl
+environment = "dev"
+```
+
+Result:
+
+```text
+t3.micro
+```
+
+---
+
+# Easy Memory Trick
+
+```text
+?
+=
+IF TRUE
+
+:
+=
+ELSE
+```
+
+Equivalent Java Code:
+
+```java
+if(environment.equals("prod")){
+    instanceType = "t3.large";
+}else{
+    instanceType = "t3.micro";
+}
+```
+
+---
+
+# 7. Built-in Functions
+
+Terraform provides built-in functions.
+
+---
+
+## length()
+
+Example:
+
+```hcl
+length(["EC2","S3","VPC"])
+```
+
+Output:
+
+```text
+3
+```
+
+---
+
+## map()
+
+Example:
+
+```hcl
+{
+  dev  = "t3.micro"
+  prod = "t3.large"
+}
+```
+
+Stores key-value pairs.
+
+---
+
+# Most Important Learning From Day 2
+
+Day 1 taught:
+
+```text
+Terraform creates infrastructure.
+```
+
+Day 2 teaches:
+
+```text
+Terraform code should be reusable.
+```
+
+Goals:
+
+* Avoid hardcoding
+* Separate code from values
+* Support multiple environments
+* Make code maintainable
+
+---
+
+# Interview Questions
+
+## What is a Provider?
+
+A provider is a plugin that enables Terraform to communicate with AWS, Azure, GCP, Docker, Kubernetes, etc.
+
+---
+
+## What is a Variable?
+
+Variables are used to make Terraform configurations reusable and avoid hardcoded values.
+
+---
+
+## What is terraform.tfvars?
+
+terraform.tfvars stores the actual values assigned to variables.
+
+---
+
+## What is an Output?
+
+Outputs display useful information after resources are created.
+
+---
+
+## Difference Between variables.tf and terraform.tfvars?
+
+variables.tf
+
+```text
+Declares Variables
+```
+
+terraform.tfvars
+
+```text
+Assigns Values
+```
+
+---
+
+## What does this mean?
+
+```hcl
+var.environment == "prod"
+? "t3.large"
+: "t3.micro"
+```
+
+Answer:
+
+```text
+IF environment is prod
+    Use t3.large
+
+ELSE
+    Use t3.micro
+```
+
+---
+
+# Day 2 Summary
+
+Completed Topics:
+
+✅ Providers
+
+✅ Multi Region Providers
+
+✅ Variables
+
+✅ terraform.tfvars
+
+✅ Outputs
+
+✅ Project Structure
+
+✅ Conditional Expressions
+
+✅ Built-in Functions
+
+✅ Reusable Terraform Code
+
+Status:
+
+```text
+Terraform Day 2 Complete ✅
+```
