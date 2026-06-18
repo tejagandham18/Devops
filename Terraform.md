@@ -1138,3 +1138,760 @@ Status:
 ```text
 Terraform Day 2 Complete ✅
 ```
+
+
+# Terraform Zero to Hero - Day 3 Notes
+
+# Overview
+
+Day 3 focuses on one of the most important Terraform concepts:
+
+```text
+Terraform Modules
+```
+
+Modules help us avoid code duplication by creating reusable infrastructure components.
+
+Think:
+
+```text
+Variables = Reusable Values
+
+Modules = Reusable Infrastructure
+```
+
+---
+
+# Problem Before Modules
+
+Suppose a company needs:
+
+```text
+Dev EC2
+QA EC2
+Prod EC2
+```
+
+Without modules:
+
+```hcl
+resource "aws_instance" "dev" {
+}
+
+resource "aws_instance" "qa" {
+}
+
+resource "aws_instance" "prod" {
+}
+```
+
+Problem:
+
+* Duplicate code
+* Difficult maintenance
+* Hard to scale
+* Higher chance of mistakes
+
+---
+
+# Why Modules?
+
+Modules solve:
+
+```text
+Code Duplication
+Maintenance Problems
+Standardization Issues
+```
+
+Benefits:
+
+* Reusability
+* Maintainability
+* Standardization
+* Team Collaboration
+* Easier Debugging
+
+---
+
+# Real World Example
+
+Think about building houses.
+
+Without Modules:
+
+```text
+Design House 1
+Design House 2
+Design House 3
+```
+
+Every house designed separately.
+
+---
+
+With Modules:
+
+```text
+Create One Blueprint
+
+House Blueprint
+      ↓
+House 1
+House 2
+House 3
+```
+
+Terraform Modules work the same way.
+
+---
+
+# What Is A Terraform Module?
+
+Definition:
+
+A Terraform Module is a reusable collection of Terraform configurations used to create infrastructure components.
+
+Examples:
+
+```text
+EC2 Module
+VPC Module
+S3 Module
+Security Group Module
+RDS Module
+```
+
+---
+
+# Variables vs Modules
+
+## Variables
+
+Variables make values reusable.
+
+Examples:
+
+```text
+Instance Type
+Environment
+Region
+CIDR
+```
+
+Example:
+
+```hcl
+variable "instance_type" {}
+```
+
+---
+
+## Modules
+
+Modules make infrastructure reusable.
+
+Examples:
+
+```text
+EC2 Creation Logic
+VPC Creation Logic
+S3 Creation Logic
+```
+
+Example:
+
+```hcl
+module "ec2_server" {
+}
+```
+
+---
+
+# Terraform Project Without Modules
+
+```text
+project
+
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── main.tf
+└── outputs.tf
+```
+
+All resources are written directly inside main.tf.
+
+---
+
+# Terraform Project With Modules
+
+```text
+project
+
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── main.tf
+├── outputs.tf
+│
+└── modules
+      │
+      └── ec2
+           │
+           ├── main.tf
+           ├── variables.tf
+           └── outputs.tf
+```
+
+---
+
+# Understanding Module Structure
+
+## modules/ec2/main.tf
+
+Contains actual EC2 creation logic.
+
+Example:
+
+```hcl
+resource "aws_instance" "server" {
+
+  ami           = var.ami
+
+  instance_type = var.instance_type
+
+}
+```
+
+Purpose:
+
+```text
+EC2 Blueprint
+```
+
+---
+
+## modules/ec2/variables.tf
+
+Declares variables used inside the module.
+
+Example:
+
+```hcl
+variable "instance_type" {}
+
+variable "ami" {}
+```
+
+Purpose:
+
+```text
+Module Inputs
+```
+
+---
+
+## modules/ec2/outputs.tf
+
+Returns values after resource creation.
+
+Example:
+
+```hcl
+output "public_ip" {
+
+ value = aws_instance.server.public_ip
+
+}
+```
+
+Purpose:
+
+```text
+Module Outputs
+```
+
+---
+
+# Calling A Module
+
+From root project:
+
+```hcl
+module "dev_server" {
+
+ source = "./modules/ec2"
+
+ instance_type = "t3.micro"
+
+ ami = "ami-12345"
+
+}
+```
+
+Meaning:
+
+```text
+Go to EC2 Module
+
+Create EC2
+
+Use provided values
+```
+
+---
+
+# Understanding source
+
+Example:
+
+```hcl
+source = "./modules/ec2"
+```
+
+Meaning:
+
+```text
+Terraform
+
+Navigate to:
+
+modules/ec2
+
+Read Module Files
+
+Create Resources
+```
+
+Think:
+
+```text
+Module Location
+```
+
+---
+
+# Module Inputs
+
+Inputs are values passed into a module.
+
+Example:
+
+```hcl
+module "server" {
+
+ source = "./modules/ec2"
+
+ instance_type = "t3.micro"
+
+}
+```
+
+Input:
+
+```text
+instance_type
+```
+
+---
+
+# Java Analogy
+
+Java Method:
+
+```java
+public void createServer(String type){
+
+}
+```
+
+Call:
+
+```java
+createServer("t3.micro");
+```
+
+---
+
+Terraform Module:
+
+```hcl
+module "server" {
+
+ instance_type = "t3.micro"
+
+}
+```
+
+Exactly the same concept.
+
+---
+
+# Module Outputs
+
+Suppose module creates:
+
+```text
+EC2 Instance
+```
+
+AWS returns:
+
+```text
+3.110.118.137
+```
+
+Public IP.
+
+---
+
+Inside Module:
+
+```hcl
+output "public_ip" {
+
+ value = aws_instance.server.public_ip
+
+}
+```
+
+---
+
+Access From Root Project:
+
+```hcl
+output "server_ip" {
+
+ value = module.server.public_ip
+
+}
+```
+
+Terraform prints:
+
+```text
+3.110.118.137
+```
+
+---
+
+# Reusing Modules
+
+Same module can create multiple servers.
+
+Example:
+
+```hcl
+module "dev" {
+
+ source = "./modules/ec2"
+
+ instance_type = "t3.micro"
+
+}
+```
+
+---
+
+```hcl
+module "qa" {
+
+ source = "./modules/ec2"
+
+ instance_type = "t3.micro"
+
+}
+```
+
+---
+
+```hcl
+module "prod" {
+
+ source = "./modules/ec2"
+
+ instance_type = "t3.large"
+
+}
+```
+
+Result:
+
+```text
+One Module
+
+Three Servers
+```
+
+---
+
+# Why Companies Use Modules
+
+Suppose company policy changes:
+
+```text
+Add Monitoring
+Add New Tags
+Enable Encryption
+```
+
+Without Modules:
+
+```text
+Edit 100 Terraform Files
+```
+
+---
+
+With Modules:
+
+```text
+Edit Module Once
+
+All Resources Updated
+```
+
+Huge benefit.
+
+---
+
+# Public Modules
+
+Terraform provides:
+
+```text
+Terraform Registry
+```
+
+Think:
+
+```text
+GitHub For Terraform Modules
+```
+
+Contains:
+
+```text
+VPC Modules
+EC2 Modules
+EKS Modules
+S3 Modules
+```
+
+Example:
+
+```hcl
+module "vpc" {
+
+ source = "terraform-aws-modules/vpc/aws"
+
+}
+```
+
+Terraform downloads and uses the module automatically.
+
+---
+
+# Private Modules
+
+Most organizations create their own modules.
+
+Reasons:
+
+* Security
+* Standardization
+* Compliance
+* Monitoring Requirements
+* Tagging Standards
+
+Examples:
+
+```text
+Company EC2 Module
+Company VPC Module
+Company Security Group Module
+```
+
+Stored in:
+
+```text
+GitHub Enterprise
+GitLab
+Bitbucket
+```
+
+---
+
+# Real DevOps Example
+
+Suppose company requires:
+
+```text
+Every EC2 Must Have
+
+Monitoring
+Approved Security Group
+Mandatory Tags
+Encryption
+```
+
+Instead of trusting every engineer:
+
+Create:
+
+```text
+Company EC2 Module
+```
+
+All engineers use:
+
+```hcl
+module "ec2" {
+
+ source = "company/ec2"
+
+}
+```
+
+Standards automatically applied.
+
+---
+
+# Day 3 Deep Understanding
+
+Day 1:
+
+```text
+Terraform Creates Infrastructure
+```
+
+---
+
+Day 2:
+
+```text
+Variables Make Values Reusable
+```
+
+---
+
+Day 3:
+
+```text
+Modules Make Infrastructure Reusable
+```
+
+---
+
+# Memory Trick
+
+```text
+Variable
+=
+Reusable Value
+
+Module
+=
+Reusable Infrastructure
+```
+
+---
+
+# Interview Questions
+
+## What Is A Terraform Module?
+
+A Terraform Module is a reusable collection of Terraform resources used to standardize and simplify infrastructure creation.
+
+---
+
+## Why Use Modules?
+
+* Reduce code duplication
+* Improve maintainability
+* Enable reusability
+* Standardize infrastructure
+* Simplify collaboration
+
+---
+
+## Difference Between Variables And Modules?
+
+Variables:
+
+```text
+Reusable Values
+```
+
+Examples:
+
+```text
+Region
+Environment
+Instance Type
+```
+
+---
+
+Modules:
+
+```text
+Reusable Infrastructure
+```
+
+Examples:
+
+```text
+EC2 Creation Logic
+VPC Creation Logic
+S3 Creation Logic
+```
+
+---
+
+## What Does source Mean In A Module?
+
+The source attribute tells Terraform where the module is located.
+
+Example:
+
+```hcl
+source = "./modules/ec2"
+```
+
+Meaning:
+
+```text
+Use The EC2 Module Stored In modules/ec2
+```
+
+---
+
+# Day 3 Summary
+
+Completed Topics:
+
+✅ Why Modules
+
+✅ Module Structure
+
+✅ Module Inputs
+
+✅ Module Outputs
+
+✅ Module Reusability
+
+✅ Terraform Registry
+
+✅ Public Modules
+
+✅ Private Modules
+
+✅ Industry Best Practices
+
+Status:
+
+```text
+Terraform Day 3 Complete ✅
+```
