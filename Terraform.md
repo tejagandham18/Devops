@@ -1895,3 +1895,339 @@ Status:
 ```text
 Terraform Day 3 Complete ✅
 ```
+
+# Terraform Zero to Hero - Day 4
+
+## Terraform State File, Remote Backend & State Locking
+
+### Based on Abhishek Veeramalla's Day 4
+
+## Objectives
+
+-   Understand Terraform State File
+-   Problems with Local State
+-   Remote Backend using Amazon S3
+-   State Locking using DynamoDB
+
+## 1. Terraform State File
+
+Terraform State (`terraform.tfstate`) is the heart of Terraform.
+
+It stores a mapping between: - Your Terraform configuration (`.tf`
+files) - The real infrastructure running in AWS
+
+Without the state file Terraform cannot determine: - What resources it
+created - Which resources should be updated - Which resources should be
+deleted
+
+### Lifecycle
+
+``` text
+main.tf
+   ↓
+terraform apply
+   ↓
+AWS creates resources
+   ↓
+terraform.tfstate is created
+```
+
+The state file stores information such as: - EC2 Instance ID - Public
+IP - Private IP - AMI ID - Tags - Resource ARN
+
+## 2. Why Terraform Needs State
+
+When `terraform plan` runs it compares: 1. Desired State (Terraform
+code) 2. Current State (terraform.tfstate) 3. Actual AWS Infrastructure
+
+It calculates the difference and prepares an execution plan.
+
+## 3. Problems with Local State
+
+Keeping `terraform.tfstate` only on a developer's laptop creates
+problems:
+
+-   Team members cannot share the latest state.
+-   State may be lost if the laptop crashes.
+-   Sensitive values can be exposed.
+-   Two engineers may overwrite each other's changes.
+
+## 4. Remote Backend
+
+A Backend determines where Terraform stores its state.
+
+Instead of:
+
+Laptop → terraform.tfstate
+
+Store it in:
+
+Amazon S3 Bucket
+
+Benefits: - Centralized - Secure - Shared by the team - Versioning
+supported
+
+## 5. State Locking
+
+Problem: Two engineers run `terraform apply` simultaneously.
+
+Result: State corruption or conflicting changes.
+
+Solution: Use DynamoDB for locking.
+
+Flow:
+
+Engineer A ↓ Lock acquired ↓ terraform apply ↓ Unlock
+
+Engineer B ↓ Wait until lock is released
+
+## Key Commands
+
+``` bash
+terraform init
+terraform plan
+terraform apply
+terraform destroy
+```
+
+## Best Practices
+
+-   Never edit terraform.tfstate manually.
+-   Never commit state files to Git.
+-   Use S3 backend for teams.
+-   Enable S3 versioning.
+-   Use DynamoDB locking.
+
+## Interview Questions
+
+1.  Why is the state file called the heart of Terraform?
+2.  What problems occur with local state?
+3.  Why is S3 used as a backend?
+4.  Why is DynamoDB used?
+5.  What happens if two users run `terraform apply` together?
+
+## Summary
+
+-   State remembers infrastructure.
+-   Backend stores state remotely.
+-   DynamoDB prevents concurrent updates.
+
+# Terraform Zero to Hero - Day 5
+
+## Terraform Provisioners
+
+### Based on Abhishek Veeramalla's Day 5
+
+## Objective
+
+Learn how Terraform performs actions after infrastructure creation.
+
+## Problem
+
+Terraform creates infrastructure but does not install software
+automatically.
+
+Example:
+
+Create EC2 ↓ Need Python Need Flask Need Application Files
+
+Manual SSH becomes repetitive.
+
+## Solution
+
+Terraform Provisioners perform additional tasks after resource creation.
+
+## Types of Provisioners
+
+### 1. remote-exec
+
+Runs commands on the remote EC2 using SSH.
+
+Example tasks: - apt update - Install Docker - Install Python - Install
+Flask - Start services
+
+Workflow:
+
+terraform apply ↓ Create EC2 ↓ SSH ↓ Run Linux commands
+
+### 2. file Provisioner
+
+Copies files from local machine to EC2.
+
+Example:
+
+Local: app.py
+
+↓
+
+EC2: /home/ubuntu/app.py
+
+### 3. local-exec
+
+Runs commands on the machine executing Terraform.
+
+Examples: - echo "Deployment completed" - Trigger another script - Call
+Ansible playbook
+
+## Why Provisioners?
+
+Achieve zero-touch deployment.
+
+Instead of:
+
+Create EC2 ↓ SSH manually ↓ Install software ↓ Copy files
+
+Terraform automates the entire process.
+
+## Practical Scenario
+
+Developer modifies app.py
+
+DevOps engineer runs:
+
+terraform apply
+
+Terraform: - Creates EC2 - Copies application - Installs dependencies -
+Starts application
+
+## Important Note
+
+HashiCorp recommends using Provisioners only when necessary.
+
+For large-scale configuration use tools like: - Ansible - Chef - Puppet
+
+Terraform = Infrastructure
+
+Ansible = Configuration
+
+## Best Practices
+
+-   Keep Provisioners minimal.
+-   Prefer configuration management tools for complex setups.
+-   Always run `terraform destroy` after demos to avoid costs.
+
+## Interview Questions
+
+1.  What are Provisioners?
+2.  Difference between file, remote-exec and local-exec?
+3.  Why do companies prefer Ansible over Provisioners?
+
+## Summary
+
+Provisioners automate post-creation tasks and reduce manual server
+configuration.
+
+# Terraform Zero to Hero - Day 6
+
+## Terraform Workspaces
+
+### Based on Abhishek Veeramalla's Day 6
+
+## Objective
+
+Manage multiple environments using a single Terraform codebase.
+
+## Problem
+
+Using one state file for Dev, QA and Production causes conflicts.
+
+Example:
+
+Dev EC2 ↓
+
+Change configuration for QA
+
+↓
+
+Terraform modifies Dev instead of creating QA.
+
+## Solution
+
+Terraform Workspaces
+
+Each workspace has its own state file.
+
+Example:
+
+Default Dev QA Stage Prod
+
+Each maintains separate infrastructure state.
+
+## Workspace Structure
+
+terraform.tfstate.d/
+
+├── dev/ │ └── terraform.tfstate ├── qa/ │ └── terraform.tfstate └──
+prod/ └── terraform.tfstate
+
+## Common Commands
+
+Create workspace
+
+``` bash
+terraform workspace new dev
+```
+
+List workspaces
+
+``` bash
+terraform workspace list
+```
+
+Switch workspace
+
+``` bash
+terraform workspace select prod
+```
+
+Current workspace
+
+``` bash
+terraform workspace show
+```
+
+## Practical Example
+
+Same code
+
+Different workspace
+
+Dev → t2.micro
+
+QA → t3.medium
+
+Prod → t3.xlarge
+
+This can be achieved using lookup() together with `terraform.workspace`.
+
+## Benefits
+
+-   Single codebase
+-   Separate state files
+-   Environment isolation
+-   Easier maintenance
+-   Less duplication
+
+## Workspaces vs Multiple Projects
+
+Multiple Projects - Duplicate code - Hard to maintain
+
+Workspaces - One codebase - Multiple isolated environments
+
+## Best Practices
+
+-   Use workspaces for similar environments.
+-   Keep production isolated.
+-   Combine with remote backend for teams.
+
+## Interview Questions
+
+1.  What is a Terraform Workspace?
+2.  Why do Workspaces exist?
+3.  Difference between tfvars and Workspaces?
+4.  How does Terraform isolate environments?
+
+## Summary
+
+Terraform Workspaces enable Dev, QA, Stage and Production environments
+using the same configuration while keeping separate state files.
