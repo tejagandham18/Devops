@@ -2231,3 +2231,109 @@ Workspaces - One codebase - Multiple isolated environments
 
 Terraform Workspaces enable Dev, QA, Stage and Production environments
 using the same configuration while keeping separate state files.
+
+# Terraform Zero to Hero -- Day 7
+
+## Secrets Management with HashiCorp Vault
+
+### Based on Abhishek Veeramalla's Day 7
+
+## Objective
+
+Learn how to securely manage secrets in Terraform using HashiCorp Vault.
+
+## Why Secrets Management?
+
+Sensitive information includes: - AWS Access Keys - Database Passwords -
+API Tokens - SSH Keys - Certificates
+
+Never hardcode secrets in Terraform.
+
+Bad Example:
+
+``` hcl
+resource "aws_db_instance" "mysql" {
+  username = "admin"
+  password = "Password@123"
+}
+```
+
+## What is HashiCorp Vault?
+
+Vault is a centralized secrets management system.
+
+Terraform requests secrets from Vault only when needed.
+
+Workflow:
+
+Terraform ↓ Authenticate to Vault ↓ Retrieve Secret ↓ Create AWS
+Resource
+
+## Vault Components
+
+### Secret Engine
+
+Stores secrets like database passwords and API keys.
+
+### Authentication
+
+Verifies identity before allowing access. Examples: - Token - AWS IAM -
+GitHub - Kubernetes - LDAP
+
+### Policies
+
+Control who can access which secrets.
+
+Developer → Dev Secrets
+
+Admin → All Secrets
+
+## Why Not terraform.tfvars?
+
+Although secrets can be placed in terraform.tfvars, it is not
+recommended because: - It may be committed to Git. - Passwords become
+visible. - Rotation is difficult.
+
+## Practical Demo
+
+Abhishek demonstrates: - Deploying Vault on EC2 - Accessing Vault UI -
+Using Root Token - Secret Engines - Authentication - Policies
+
+## Benefits
+
+-   Centralized Secrets
+-   Encryption
+-   Access Control
+-   Secret Rotation
+-   Audit Logs
+
+## Best Practices
+
+-   Never hardcode passwords.
+-   Never commit secrets to GitHub.
+-   Use Vault or cloud secret managers.
+-   Rotate secrets regularly.
+
+## Interview Questions
+
+1.  What is HashiCorp Vault?
+2.  Why use Secrets Management?
+3.  What are Secret Engines?
+4.  What are Vault Policies?
+5.  Difference between terraform.tfvars and Vault?
+
+## Complete Terraform Journey
+
+Day 1 - Basics
+
+Day 2 - Variables
+
+Day 3 - Modules
+
+Day 4 - State File
+
+Day 5 - Provisioners
+
+Day 6 - Workspaces
+
+Day 7 - Secrets Management
