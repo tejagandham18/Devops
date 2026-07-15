@@ -121,3 +121,207 @@ VS Code Extensions: - YAML (Red Hat) - Ansible (Red Hat)
 -   Learn agentless architecture.
 -   Learn YAML basics.
 -   Understand how Terraform and Ansible complement each other.
+
+# Ansible Zero to Hero - Day 2 Notes (Abhishek Veeramalla)
+
+## Overview
+
+Day 2 covers three core concepts: 1. Passwordless Authentication 2.
+Inventory 3. Ad-hoc Commands
+
+These concepts explain how Ansible connects to servers, knows which
+servers to manage, and executes commands.
+
+------------------------------------------------------------------------
+
+## Ansible Architecture
+
+``` text
+Control Node (Laptop/WSL)
+        |
+       SSH
+        |
+ --------------------------
+ |          |             |
+Managed1  Managed2    Managed3
+```
+
+### Control Node
+
+Machine where Ansible is installed.
+
+### Managed Nodes
+
+Servers managed by Ansible (AWS EC2, Azure VM, Linux servers, etc.).
+
+------------------------------------------------------------------------
+
+# 1. Passwordless Authentication
+
+Automation cannot stop for passwords.
+
+### SSH Key Authentication
+
+``` text
+Private Key (Laptop)
+        |
+       SSH
+        |
+Public Key (Server)
+        |
+ Authentication
+```
+
+Generate keys:
+
+``` bash
+ssh-keygen
+```
+
+Copy public key:
+
+``` bash
+ssh-copy-id ubuntu@<server-ip>
+```
+
+Public key is copied into:
+
+``` text
+~/.ssh/authorized_keys
+```
+
+AWS already follows this model using `.pem` files.
+
+Benefits: - Secure - Fast - Required for automation - No manual password
+entry
+
+------------------------------------------------------------------------
+
+# 2. Inventory
+
+Inventory tells Ansible which servers to manage.
+
+Example (INI):
+
+``` ini
+[web]
+10.0.1.10
+10.0.1.11
+
+[database]
+10.0.2.10
+```
+
+Benefits: - Groups servers - Targets only required machines - Easier
+management
+
+Default inventory:
+
+``` text
+/etc/ansible/hosts
+```
+
+Best practice: maintain a project-specific inventory.
+
+------------------------------------------------------------------------
+
+# 3. Ad-hoc Commands
+
+Used for quick one-time tasks.
+
+Syntax:
+
+``` bash
+ansible <target> -i <inventory> -m <module> -a "<arguments>"
+```
+
+Examples:
+
+Check connectivity:
+
+``` bash
+ansible all -m ping
+```
+
+Check hostname:
+
+``` bash
+ansible all -m shell -a "hostname"
+```
+
+Check disk usage:
+
+``` bash
+ansible all -m shell -a "df -h"
+```
+
+------------------------------------------------------------------------
+
+## Common Modules
+
+-   ping
+-   shell
+-   command
+-   copy
+-   apt
+-   yum
+-   file
+-   service
+
+------------------------------------------------------------------------
+
+## Ad-hoc vs Playbooks
+
+Ad-hoc: - One-time tasks - Testing - Troubleshooting
+
+Playbooks: - Reusable - Multi-step automation - Application deployment -
+Server configuration
+
+------------------------------------------------------------------------
+
+## Workflow
+
+``` text
+Control Node
+      |
+Reads Inventory
+      |
+Passwordless SSH
+      |
+Runs Ad-hoc Command / Playbook
+      |
+Managed Nodes
+```
+
+------------------------------------------------------------------------
+
+## Terraform + Ansible
+
+Terraform: - Creates infrastructure
+
+Ansible: - Configures infrastructure
+
+Workflow:
+
+Terraform → Create EC2 → Inventory → SSH → Ansible → Configure Server →
+Deploy Application
+
+------------------------------------------------------------------------
+
+## Interview Questions
+
+1.  What is Passwordless Authentication?
+2.  What is Inventory?
+3.  Why use project-specific inventory?
+4.  What are Ad-hoc commands?
+5.  Difference between Ad-hoc commands and Playbooks?
+
+------------------------------------------------------------------------
+
+## Key Takeaways
+
+-   Understand Control Node and Managed Nodes.
+-   Learn SSH key authentication.
+-   Learn Inventory and grouping.
+-   Learn Ad-hoc commands.
+-   Understand how Ansible works with Terraform.
