@@ -320,6 +320,221 @@ Deploy Application
 
 ## Key Takeaways
 
+# Ansible Zero to Hero - Day 3 Notes (Abhishek Veeramalla)
+
+## Overview
+
+Day 3 introduces **Ansible Playbooks**, the core automation feature of
+Ansible. It explains YAML basics, playbook structure, tasks, modules,
+and demonstrates deploying a static website by installing Apache and
+copying an `index.html` file to an EC2 instance.
+
+------------------------------------------------------------------------
+
+## What is a Playbook?
+
+A Playbook is a YAML file that defines one or more automation tasks to
+be executed on managed nodes.
+
+Instead of manually running commands:
+
+-   Install Apache
+-   Copy website files
+-   Start Apache
+
+You write them once in a playbook and execute:
+
+``` bash
+ansible-playbook webserver.yml
+```
+
+------------------------------------------------------------------------
+
+## Why Playbooks?
+
+Benefits: - Reusable - Repeatable - Version controlled - Easy to
+maintain - Consistent deployments
+
+Workflow:
+
+Playbook → SSH → Execute Tasks → Configured Server
+
+------------------------------------------------------------------------
+
+## YAML Basics
+
+### String
+
+``` yaml
+name: Apache
+```
+
+### Number
+
+``` yaml
+port: 80
+```
+
+### Boolean
+
+``` yaml
+enabled: true
+```
+
+### List
+
+``` yaml
+packages:
+  - git
+  - docker
+  - nginx
+```
+
+### Dictionary
+
+``` yaml
+name: apache2
+state: present
+```
+
+### List of Dictionaries
+
+``` yaml
+users:
+  - name: Teja
+    role: DevOps
+  - name: Rahul
+    role: Developer
+```
+
+------------------------------------------------------------------------
+
+## Playbook Structure
+
+Hierarchy:
+
+Playbook → Play → Hosts → Tasks → Modules → Arguments
+
+### Hosts
+
+Example:
+
+``` yaml
+hosts: web
+```
+
+Targets the "web" group from the Inventory.
+
+### Remote User
+
+``` yaml
+remote_user: ubuntu
+```
+
+Defines the SSH user.
+
+### Tasks
+
+A task performs one operation such as:
+
+-   Install Apache
+-   Copy HTML
+-   Restart Service
+
+------------------------------------------------------------------------
+
+## Modules
+
+Common modules:
+
+-   apt
+-   copy
+-   service
+-   shell
+-   command
+-   ping
+-   file
+
+Example:
+
+``` yaml
+- name: Install Apache
+  apt:
+    name: apache2
+    state: present
+```
+
+------------------------------------------------------------------------
+
+## Official Documentation
+
+Documentation:
+
+https://docs.ansible.com/
+
+Use it to understand: - Parameters - Examples - Return values - Module
+behavior
+
+------------------------------------------------------------------------
+
+## Practical Demo
+
+Objective:
+
+Deploy a static website.
+
+Steps:
+
+1.  Install Apache
+2.  Copy index.html to `/var/www/html`
+3.  Start Apache
+4.  Browse to `http://<EC2-Public-IP>`
+
+Website becomes accessible.
+
+------------------------------------------------------------------------
+
+## Ad-hoc vs Playbooks
+
+Ad-hoc: - Quick checks - Ping - Hostname - Troubleshooting
+
+Playbooks: - Application deployment - Multi-step automation - Repeatable
+workflows
+
+------------------------------------------------------------------------
+
+## Terraform + Ansible
+
+Terraform: - Creates Infrastructure
+
+Ansible: - Configures Infrastructure
+
+Workflow:
+
+Terraform → EC2 Created → Ansible Playbook → Apache Installed → Website
+Deployed
+
+------------------------------------------------------------------------
+
+## Interview Questions
+
+1.  What is a Playbook?
+2.  Why does Ansible use YAML?
+3.  What is a Task?
+4.  What is a Module?
+5.  Difference between Ad-hoc Commands and Playbooks?
+
+------------------------------------------------------------------------
+
+## Key Takeaways
+
+-   Understand YAML basics.
+-   Understand Playbook structure.
+-   Learn Hosts, Tasks and Modules.
+-   Learn Apache deployment using Playbooks.
+-   Understand how Playbooks fit into Terraform + Ansible workflows.
+
+
 -   Understand Control Node and Managed Nodes.
 -   Learn SSH key authentication.
 -   Learn Inventory and grouping.
