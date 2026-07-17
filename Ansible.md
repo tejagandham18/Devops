@@ -540,3 +540,161 @@ Deployed
 -   Learn Inventory and grouping.
 -   Learn Ad-hoc commands.
 -   Understand how Ansible works with Terraform.
+
+
+# Ansible Zero to Hero - Day 4 Notes (Roles)
+
+## Overview
+
+Day 4 explains **Ansible Roles**, which help organize large playbooks
+into reusable and maintainable components.
+
+Learning Flow: - Day 1 → What is Ansible? - Day 2 → Connecting to
+servers - Day 3 → Automating with Playbooks - Day 4 → Organizing
+automation with Roles
+
+------------------------------------------------------------------------
+
+## Why Roles?
+
+Large playbooks with dozens of tasks become difficult to maintain.
+
+Instead of putting everything into one `site.yml`, split related
+automation into separate roles.
+
+Benefits: - Modular - Reusable - Easy to maintain - Easy for teams to
+collaborate
+
+------------------------------------------------------------------------
+
+## What is a Role?
+
+A Role is a standardized folder structure containing everything needed
+for one specific configuration.
+
+Examples: - apache - mysql - docker - security
+
+Each role has one responsibility.
+
+------------------------------------------------------------------------
+
+## Create a Role
+
+``` bash
+ansible-galaxy role init apache
+```
+
+This creates:
+
+``` text
+roles/
+└── apache/
+    ├── tasks/
+    ├── handlers/
+    ├── files/
+    ├── templates/
+    ├── vars/
+    ├── defaults/
+    ├── meta/
+    └── tests/
+```
+
+------------------------------------------------------------------------
+
+## Folder Purpose
+
+### tasks/
+
+Main automation logic (`tasks/main.yml`).
+
+### handlers/
+
+Runs only when notified (example: restart Apache).
+
+### files/
+
+Static files such as HTML, CSS, images.
+
+### templates/
+
+Dynamic Jinja2 templates using variables.
+
+### vars/
+
+Role-specific variables.
+
+### defaults/
+
+Default variable values that users can override.
+
+### meta/
+
+Author, dependencies, metadata.
+
+### tests/
+
+Testing files for the role.
+
+------------------------------------------------------------------------
+
+## Converting a Playbook into a Role
+
+Move: - Installation tasks → tasks/main.yml - Static files → files/
+
+Main playbook:
+
+``` yaml
+- hosts: web
+  roles:
+    - apache
+```
+
+------------------------------------------------------------------------
+
+## Internal Workflow
+
+Run Playbook → Read Role → Execute tasks → Read vars/defaults → Copy
+files → Render templates → Execute handlers if notified
+
+------------------------------------------------------------------------
+
+## Idempotency
+
+Run 1: Apache not installed → Install Apache
+
+Run 2: Apache already installed → No change
+
+Benefits: - Safe - Fast - No duplicate work - Consistent server state
+
+------------------------------------------------------------------------
+
+## Terraform vs Ansible
+
+  Terraform            Ansible
+  -------------------- ----------------
+  Module               Role
+  Infrastructure       Configuration
+  Reusable Resources   Reusable Tasks
+
+------------------------------------------------------------------------
+
+## Interview Questions
+
+-   What is an Ansible Role?
+-   Why do we use Roles?
+-   What is Ansible Galaxy?
+-   What is Idempotency?
+-   Explain the purpose of tasks, handlers, files, templates, vars,
+    defaults and meta.
+
+------------------------------------------------------------------------
+
+## Key Takeaways
+
+-   Roles organize automation.
+-   One role = one responsibility.
+-   Use `ansible-galaxy role init` to generate the structure.
+-   Store content in the correct folders.
+-   Roles improve readability, modularity and reusability.
+-   Idempotency ensures repeated executions are safe.
+
