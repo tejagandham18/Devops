@@ -698,3 +698,177 @@ Benefits: - Safe - Fast - No duplicate work - Consistent server state
 -   Roles improve readability, modularity and reusability.
 -   Idempotency ensures repeated executions are safe.
 
+# Ansible Zero to Hero - Day 5: Ansible Galaxy
+
+## 📖 Overview
+
+Day 5 introduces **Ansible Galaxy**, the official marketplace for
+reusable Ansible Roles and Collections.
+
+Instead of writing common automation from scratch, you can download
+community-created roles and use them in your projects.
+
+------------------------------------------------------------------------
+
+## Learning Flow
+
+``` text
+Day 1 → Introduction
+Day 2 → Inventory & SSH
+Day 3 → Playbooks
+Day 4 → Roles
+Day 5 → Ansible Galaxy
+```
+
+------------------------------------------------------------------------
+
+# What is Ansible Galaxy?
+
+Ansible Galaxy is a community repository where DevOps engineers share
+reusable roles.
+
+Examples: - Docker - Apache - Nginx - MySQL - Jenkins - Prometheus
+
+------------------------------------------------------------------------
+
+# Why Use Ansible Galaxy?
+
+Instead of writing the same automation repeatedly:
+
+-   Search for a role
+-   Install it
+-   Use it
+
+Benefits: - Saves time - Reuses tested code - Improves productivity -
+Standardizes automation
+
+------------------------------------------------------------------------
+
+# Install a Role
+
+``` bash
+ansible-galaxy role install geerlingguy.docker
+```
+
+Downloaded roles are stored in:
+
+``` text
+~/.ansible/roles
+```
+
+------------------------------------------------------------------------
+
+# Using a Role
+
+``` yaml
+- hosts: all
+  become: true
+
+  roles:
+    - geerlingguy.docker
+```
+
+------------------------------------------------------------------------
+
+# Internal Workflow
+
+``` text
+Search Role
+      │
+      ▼
+Install Role
+      │
+      ▼
+Stored in ~/.ansible/roles
+      │
+      ▼
+Reference in Playbook
+      │
+      ▼
+Execute Role
+```
+
+------------------------------------------------------------------------
+
+# Publishing Your Own Role
+
+1.  Create a role.
+
+``` bash
+ansible-galaxy role init apache
+```
+
+2.  Push it to GitHub.
+
+3.  Update `meta/main.yml`.
+
+Example:
+
+``` yaml
+galaxy_info:
+  author: Your Name
+  description: Apache Role
+  license: MIT
+```
+
+4.  Import the repository into Ansible Galaxy.
+
+------------------------------------------------------------------------
+
+# Best Practices
+
+-   Use trusted roles.
+-   Read documentation before using.
+-   Pin versions in production.
+-   Don't modify downloaded roles directly.
+
+------------------------------------------------------------------------
+
+# Terraform vs Ansible Galaxy
+
+  Terraform              Ansible
+  ---------------------- ---------------------
+  Registry               Galaxy
+  Modules                Roles
+  Infrastructure Reuse   Configuration Reuse
+
+------------------------------------------------------------------------
+
+# Interview Questions
+
+## What is Ansible Galaxy?
+
+The official marketplace for Ansible Roles and Collections.
+
+## Why use it?
+
+To reuse automation and reduce development effort.
+
+## Where are roles stored?
+
+``` text
+~/.ansible/roles
+```
+
+## How do you install a role?
+
+``` bash
+ansible-galaxy role install <role_name>
+```
+
+## How do you publish a role?
+
+-   Create Role
+-   Push to GitHub
+-   Update meta/main.yml
+-   Import into Galaxy
+
+------------------------------------------------------------------------
+
+# Key Takeaways
+
+-   Galaxy is the official repository for reusable roles.
+-   Install roles using `ansible-galaxy role install`.
+-   Downloaded roles are stored in `~/.ansible/roles`.
+-   Roles can be referenced directly in playbooks.
+-   Publish your own roles through GitHub and Ansible Galaxy.
