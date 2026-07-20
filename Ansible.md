@@ -872,3 +872,724 @@ ansible-galaxy role install <role_name>
 -   Downloaded roles are stored in `~/.ansible/roles`.
 -   Roles can be referenced directly in playbooks.
 -   Publish your own roles through GitHub and Ansible Galaxy.
+
+# Ansible Zero to Hero - Day 7: Collections, Variables & Variable Precedence
+
+> **Topics Covered**
+>
+> - Understanding Ansible Collections
+> - AWS Collection & boto3
+> - Creating AWS Resources using Ansible
+> - Ansible Vault
+> - Variables
+> - Variable Precedence
+> - Best Practices
+> - Interview Questions
+
+---
+
+# 📚 Table of Contents
+
+1. Introduction
+2. Understanding Ansible Collections
+3. Why Collections?
+4. Collections vs Roles vs Modules
+5. AWS Collection Architecture
+6. boto3 Library
+7. Creating AWS Resources
+8. Ansible Vault
+9. Variables
+10. Variables inside Roles
+11. Variable Precedence
+12. Real World Example
+13. Best Practices
+14. Interview Questions
+15. Key Takeaways
+
+---
+
+# Introduction
+
+Until now we have learned:
+
+```text
+Day 1 → Introduction
+Day 2 → Inventory & SSH
+Day 3 → Playbooks
+Day 4 → Roles
+Day 5 → Galaxy
+Day 6 → Collections
+Day 7 → Variables & Variable Precedence
+```
+
+Day 7 combines everything we've learned so far.
+
+Instead of only managing Linux servers, we'll learn how Ansible can manage cloud platforms like AWS, Azure, and GCP.
+
+---
+
+# Understanding Ansible Collections
+
+## What is an Ansible Collection?
+
+An **Ansible Collection** is a **versioned package** that contains:
+
+- Modules
+- Roles
+- Plugins
+- Documentation
+- Utilities
+
+Collections extend Ansible by providing functionality for specific platforms.
+
+Examples:
+
+- amazon.aws
+- azure.azcollection
+- kubernetes.core
+- cisco.ios
+
+---
+
+## Why Do We Need Collections?
+
+Imagine your manager asks you to create an EC2 instance.
+
+Can Ansible use SSH?
+
+```
+Laptop
+   │
+ SSH
+   │
+AWS ❌
+```
+
+No.
+
+AWS isn't a Linux server.
+
+Instead, AWS exposes an API.
+
+Ansible communicates with AWS through that API.
+
+---
+
+# SSH vs API
+
+## Managing Linux Servers
+
+```
+Ansible
+
+↓
+
+SSH
+
+↓
+
+Ubuntu Server
+```
+
+---
+
+## Managing AWS
+
+```
+Ansible
+
+↓
+
+AWS Collection
+
+↓
+
+boto3
+
+↓
+
+AWS API
+
+↓
+
+AWS Cloud
+```
+
+Notice that **SSH is not involved**.
+
+---
+
+# Why Collections Exist
+
+If every AWS, Azure, Cisco, VMware, Kubernetes, and GCP module were included inside Ansible Core, Ansible would become enormous.
+
+Instead:
+
+```
+Ansible Core
+
+↓
+
+Install only the Collections you need
+```
+
+Benefits:
+
+- Lightweight
+- Modular
+- Easy to update
+- Vendor maintained
+
+---
+
+# Collections vs Roles vs Modules
+
+| Module | Role | Collection |
+|----------|------|------------|
+| Performs one task | Groups related tasks | Groups Modules, Roles, Plugins & Docs |
+| Example: apt | docker | amazon.aws |
+| Smallest Unit | Reusable Automation | Complete Platform Toolkit |
+
+Hierarchy:
+
+```
+Collection
+│
+├── Modules
+├── Roles
+├── Plugins
+├── Documentation
+└── Utilities
+```
+
+---
+
+# Installing Collections
+
+Example:
+
+```bash
+ansible-galaxy collection install amazon.aws
+```
+
+This downloads the AWS toolkit.
+
+---
+
+# AWS Collection
+
+The AWS Collection provides modules like:
+
+- ec2_instance
+- ec2_vpc_net
+- s3_bucket
+- iam_user
+- ec2_security_group
+- autoscaling_group
+
+Instead of clicking through the AWS Console, you can automate everything using Playbooks.
+
+---
+
+# What is boto3?
+
+One of the most common interview questions.
+
+**boto3** is the official Python SDK for AWS.
+
+It translates Ansible requests into AWS API calls.
+
+Architecture:
+
+```
+Playbook
+
+↓
+
+amazon.aws Collection
+
+↓
+
+boto3
+
+↓
+
+AWS API
+
+↓
+
+AWS Cloud
+```
+
+Without boto3, the AWS Collection cannot communicate with AWS.
+
+Install it using:
+
+```bash
+pip install boto3 botocore
+```
+
+---
+
+# Creating AWS Resources
+
+Example Workflow:
+
+```
+Playbook
+
+↓
+
+AWS Collection
+
+↓
+
+boto3
+
+↓
+
+AWS API
+
+↓
+
+EC2 Created
+```
+
+Everything happens automatically.
+
+No manual AWS Console interaction is required.
+
+---
+
+# AWS Credentials
+
+To communicate with AWS, Ansible requires:
+
+- Access Key
+- Secret Key
+
+These credentials authenticate your requests.
+
+Never hardcode them inside playbooks.
+
+Bad Example:
+
+```yaml
+access_key: AKIAxxxxxxxx
+secret_key: mysecretkey
+```
+
+---
+
+# Ansible Vault
+
+Sensitive information should always be encrypted.
+
+Ansible Vault protects:
+
+- AWS Access Keys
+- Passwords
+- Database Credentials
+- API Tokens
+
+Example:
+
+```bash
+ansible-vault create secrets.yml
+```
+
+Encrypted files look like:
+
+```
+$ANSIBLE_VAULT;1.1;AES256
+```
+
+During execution:
+
+```
+Encrypted File
+
+↓
+
+Vault Password
+
+↓
+
+Decrypt
+
+↓
+
+Playbook
+```
+
+---
+
+# Variables
+
+Hardcoding values makes playbooks difficult to reuse.
+
+Bad:
+
+```yaml
+name: apache2
+```
+
+Better:
+
+```yaml
+name: "{{ package_name }}"
+```
+
+Variable:
+
+```yaml
+package_name: apache2
+```
+
+Tomorrow:
+
+```yaml
+package_name: nginx
+```
+
+The playbook remains unchanged.
+
+---
+
+# Variables Inside Roles
+
+Variables are usually stored in:
+
+```
+roles/
+
+defaults/
+
+main.yml
+```
+
+Example:
+
+```yaml
+package_name: apache2
+
+service_name: apache2
+
+port: 80
+```
+
+Tasks:
+
+```yaml
+apt:
+  name: "{{ package_name }}"
+```
+
+---
+
+# Why Use Variables?
+
+Benefits:
+
+- Reusable Playbooks
+- Cleaner Code
+- Easy Configuration
+- Environment-specific Deployments
+- Better Maintenance
+
+---
+
+# Variable Precedence
+
+Sometimes the same variable is defined in multiple places.
+
+Example:
+
+```
+defaults/
+
+↓
+
+group_vars/
+
+↓
+
+host_vars/
+
+↓
+
+Extra Variables
+```
+
+Which value does Ansible use?
+
+The highest precedence.
+
+---
+
+# Variable Hierarchy
+
+```
+Lowest Priority
+
+↓
+
+Role Defaults
+
+↓
+
+Inventory Variables
+
+↓
+
+Group Variables
+
+↓
+
+Host Variables
+
+↓
+
+Play Variables
+
+↓
+
+Task Variables
+
+↓
+
+Extra Variables (-e)
+
+↓
+
+Highest Priority
+```
+
+Remember:
+
+> Highest precedence always wins.
+
+---
+
+# Role Defaults
+
+Located in:
+
+```
+defaults/main.yml
+```
+
+Example:
+
+```yaml
+package_name: apache2
+```
+
+These are default values.
+
+Easy to override.
+
+---
+
+# Group Variables
+
+Example:
+
+```
+group_vars/
+
+web.yml
+
+database.yml
+```
+
+web.yml
+
+```yaml
+package_name: apache2
+```
+
+database.yml
+
+```yaml
+package_name: mysql-server
+```
+
+Each server group receives different values.
+
+---
+
+# Extra Variables
+
+Highest priority.
+
+Example:
+
+```bash
+ansible-playbook site.yml -e "package_name=nginx"
+```
+
+This overrides every other variable definition.
+
+---
+
+# Real World Example
+
+Suppose your company has three environments.
+
+Development:
+
+```yaml
+region: us-east-1
+```
+
+Testing:
+
+```yaml
+region: us-west-2
+```
+
+Production:
+
+```bash
+ansible-playbook deploy.yml -e "region=ap-south-1"
+```
+
+Production deployment overrides all other values.
+
+---
+
+# Best Practices
+
+✅ Never hardcode secrets.
+
+✅ Store sensitive data in Vault.
+
+✅ Keep default values in `defaults/main.yml`.
+
+✅ Use Group Variables for environment-specific configuration.
+
+✅ Use Extra Variables only when temporary overrides are needed.
+
+✅ Install only required Collections.
+
+---
+
+# Interview Questions
+
+## What is an Ansible Collection?
+
+A versioned package containing modules, roles, plugins, documentation, and utilities.
+
+---
+
+## Why do we use Collections?
+
+To extend Ansible with platform-specific capabilities without increasing the size of Ansible Core.
+
+---
+
+## What is boto3?
+
+The official Python SDK that allows Ansible's AWS Collection to communicate with AWS APIs.
+
+---
+
+## Why use Ansible Vault?
+
+To encrypt sensitive information such as passwords, API keys, and AWS credentials.
+
+---
+
+## Why use Variables?
+
+To avoid hardcoded values and make playbooks reusable.
+
+---
+
+## Where should Role variables be stored?
+
+```
+defaults/main.yml
+```
+
+---
+
+## Which variable has the highest precedence?
+
+Extra Variables (`-e`)
+
+---
+
+## Which variable has the lowest precedence?
+
+Role Defaults (`defaults/main.yml`)
+
+---
+
+# Key Takeaways
+
+- Collections extend Ansible for cloud providers and network platforms.
+- AWS Collections communicate through AWS APIs, not SSH.
+- boto3 acts as the communication layer between Ansible and AWS.
+- Sensitive credentials should always be stored using Ansible Vault.
+- Variables make playbooks reusable and configurable.
+- Variable precedence determines which value Ansible ultimately uses.
+- Extra Variables have the highest priority, while Role Defaults have the lowest.
+
+---
+
+# Quick Revision
+
+```
+Collections
+        │
+        ├── Modules
+        ├── Roles
+        ├── Plugins
+        └── Documentation
+
+↓
+
+AWS Collection
+
+↓
+
+boto3
+
+↓
+
+AWS API
+
+↓
+
+Cloud Resources
+
+↓
+
+Variables
+
+↓
+
+Role Defaults
+
+↓
+
+Group Variables
+
+↓
+
+Extra Variables
+
+↓
+
+Deployment
+```
+
+> **Remember:**  
+> **Module → One Task**  
+> **Role → Collection of Tasks**  
+> **Collection → Complete Platform Toolkit**  
+> **Variables → Reusable Configuration**  
+> **Vault → Secure Secrets**  
+> **Extra Variables → Highest Priority**
