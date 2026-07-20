@@ -873,7 +873,7 @@ ansible-galaxy role install <role_name>
 -   Roles can be referenced directly in playbooks.
 -   Publish your own roles through GitHub and Ansible Galaxy.
 
-# Ansible Zero to Hero - Day 7: Collections, Variables & Variable Precedence
+# Ansible Zero to Hero - Day 6: Collections, Variables & Variable Precedence
 
 > **Topics Covered**
 >
