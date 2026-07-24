@@ -2219,3 +2219,401 @@ It combines:
 into a single practical workflow.
 
 By completing this project, you understand how Ansible is used in real DevOps environments to automate cloud infrastructure efficiently and safely.
+
+
+# Ansible Zero to Hero - Day 8 Notes
+# Topic: Error Handling in Ansible Playbooks
+
+## Overview
+
+In this session, I learned how Ansible handles task failures and how to control the execution flow using different error-handling techniques. By default, Ansible stops executing further tasks on a host if a task fails. However, in real-world DevOps environments, not every failure should stop the automation. Ansible provides several mechanisms to handle these scenarios.
+
+---
+
+# Why Error Handling is Important
+
+In production environments:
+
+- Some tasks are expected to fail.
+- Some commands are only used to verify the system state.
+- Different servers may have different configurations.
+- We may want to continue execution even after certain failures.
+- We may also want to define our own conditions for considering a task as failed.
+
+Error handling makes playbooks more robust, reliable, and production-ready.
+
+---
+
+# Default Ansible Behavior
+
+By default, if a task fails on a host, Ansible stops executing the remaining tasks for that host.
+
+Example:
+
+```yaml
+tasks:
+  - Install Docker
+  - Start Docker
+  - Deploy Application
+```
+
+If **Install Docker** fails:
+
+```text
+Install Docker        ❌ Failed
+Start Docker          ❌ Skipped
+Deploy Application    ❌ Skipped
+```
+
+This is the default behavior because the remaining tasks depend on the successful completion of the previous task.
+
+---
+
+# ignore_errors
+
+## Purpose
+
+The `ignore_errors` keyword tells Ansible to continue executing the remaining tasks even if the current task fails.
+
+Example:
+
+```yaml
+- name: Check Docker
+  command: docker --version
+  ignore_errors: true
+```
+
+### Execution Flow
+
+```text
+Run Command
+      ↓
+Command Failed
+      ↓
+Ignore Failure
+      ↓
+Continue to Next Task
+```
+
+### Important Notes
+
+- The task is still marked as **FAILED**.
+- Only the playbook execution continues.
+- It should only be used when a failure is expected and acceptable.
+
+---
+
+# register
+
+## Purpose
+
+The `register` keyword stores the output of a task into a variable.
+
+Example:
+
+```yaml
+- name: Check Docker
+  command: docker --version
+  register: docker_check
+```
+
+The registered variable stores information such as:
+
+- Standard Output (stdout)
+- Standard Error (stderr)
+- Exit Code (rc)
+- Failed Status
+- Changed Status
+
+Example Output:
+
+```yaml
+docker_check:
+  stdout: Docker version 28.0
+  stderr:
+  rc: 0
+  failed: false
+```
+
+If Docker is not installed:
+
+```yaml
+docker_check:
+  stdout:
+  stderr: docker: command not found
+  rc: 127
+  failed: true
+```
+
+---
+
+# when
+
+## Purpose
+
+The `when` statement allows conditional execution of tasks.
+
+It works similarly to an **if condition** in programming languages.
+
+Example:
+
+```yaml
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+  when: docker_check.failed
+```
+
+Execution Flow:
+
+```text
+Check Docker
+      ↓
+Register Output
+      ↓
+Did Task Fail?
+      ↓
+Yes
+      ↓
+Install Docker
+```
+
+If Docker already exists, the installation task is skipped.
+
+---
+
+# failed_when
+
+## Purpose
+
+By default, Ansible decides whether a task has failed based on the command's exit code.
+
+Exit Code:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| 0 | Success |
+| Non-zero | Failure |
+
+Sometimes this default behavior is not sufficient.
+
+The `failed_when` keyword allows us to define our own condition for considering a task as failed.
+
+In simple words:
+
+> Instead of Ansible deciding what is a failure, we define our own failure condition.
+
+---
+
+## Example 1
+
+Suppose we execute:
+
+```yaml
+- name: Check Disk Usage
+  command: df -h
+  register: disk
+```
+
+The command executes successfully.
+
+Exit Code:
+
+```text
+0
+```
+
+Normally Ansible marks it as successful.
+
+Suppose the output contains:
+
+```text
+Filesystem   Use%
+/dev/xvda1   99%
+```
+
+Although the command succeeded, 99% disk usage is dangerous.
+
+We can define:
+
+```yaml
+failed_when: "'99%' in disk.stdout"
+```
+
+Execution Flow:
+
+```text
+Command Executed Successfully
+        ↓
+Exit Code = 0
+        ↓
+Normally Success
+        ↓
+failed_when Checks Output
+        ↓
+Found 99%
+        ↓
+Mark Task as FAILED
+```
+
+---
+
+## Example 2
+
+Suppose Docker version 18 is installed but our application requires version 28.
+
+```yaml
+- name: Check Docker
+  command: docker --version
+  register: docker_check
+
+  failed_when: "'18.' in docker_check.stdout"
+```
+
+Although Docker exists, the task will fail because our custom condition evaluates to true.
+
+---
+
+## Example 3
+
+Suppose a command returns a non-zero exit code, but we do not want Ansible to consider it a failure.
+
+```yaml
+- name: Example
+  command: grep hello file.txt
+
+  failed_when: false
+```
+
+Normally:
+
+```text
+Exit Code = 1
+```
+
+Ansible marks it as failed.
+
+With:
+
+```yaml
+failed_when: false
+```
+
+The task is considered successful.
+
+---
+
+# Difference Between ignore_errors and failed_when
+
+## ignore_errors
+
+Purpose:
+
+Continue execution even after a task fails.
+
+Execution Flow:
+
+```text
+Task Failed
+      ↓
+Ignore Failure
+      ↓
+Continue Execution
+```
+
+The task is still reported as failed.
+
+---
+
+## failed_when
+
+Purpose:
+
+Override Ansible's definition of task failure.
+
+Execution Flow:
+
+```text
+Command Executed
+      ↓
+Evaluate Custom Condition
+      ↓
+Condition True
+      ↓
+Mark Task as FAILED
+```
+
+or
+
+```text
+Command Failed
+      ↓
+Custom Condition False
+      ↓
+Mark Task as SUCCESS
+```
+
+---
+
+# Key Differences
+
+| ignore_errors | failed_when |
+|---------------|-------------|
+| Task actually fails | Defines whether task should fail |
+| Continues execution | Changes failure criteria |
+| Failure is ignored | Failure logic is overridden |
+
+---
+
+# Best Practices
+
+- Use `ignore_errors` only when task failures are expected.
+- Use `register` whenever task output will be used later.
+- Use `when` for conditional execution instead of unnecessary tasks.
+- Use `failed_when` only when Ansible's default failure detection is insufficient.
+
+---
+
+# Interview Questions
+
+## What is `ignore_errors`?
+
+`ignore_errors` allows the playbook to continue executing subsequent tasks even if the current task fails.
+
+---
+
+## What is `register`?
+
+`register` stores the output of a task in a variable so it can be referenced by later tasks.
+
+---
+
+## What is `when`?
+
+`when` is a conditional statement that executes a task only if the specified condition evaluates to true.
+
+---
+
+## What is `failed_when`?
+
+`failed_when` overrides Ansible's default success or failure status by allowing us to define our own condition for marking a task as failed.
+
+---
+
+# Key Takeaways
+
+After completing this session, I learned:
+
+- Default task failure behavior in Ansible.
+- Using `ignore_errors` to continue execution after expected failures.
+- Capturing task output using `register`.
+- Writing conditional tasks using `when`.
+- Overriding default failure conditions using `failed_when`.
+- Building more intelligent and production-ready Ansible playbooks.
+
+---
+
+# One-Line Summary
+
+**By default, Ansible decides whether a task has failed. Using `failed_when`, we take control and define our own criteria for determining task failure.**
