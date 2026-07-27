@@ -3081,3 +3081,540 @@ After completing this session, I learned:
 # One-Line Summary
 
 **Ansible Vault is a built-in security feature that encrypts sensitive information such as passwords, API keys, and cloud credentials, allowing them to be stored safely in Ansible projects and version control systems while remaining accessible only to authorized users with the correct vault password.**
+
+
+# Ansible Zero to Hero - Day 10 Notes
+# Topic: Policy as Code (PaC) using Ansible
+
+## Overview
+
+In this session, I learned about **Policy as Code (PaC)**, an important DevSecOps practice that allows organizations to automate the enforcement of security, compliance, and operational policies using code instead of performing manual checks.
+
+Rather than manually verifying every cloud resource, policies are written as automation scripts that continuously ensure infrastructure complies with organizational standards.
+
+The practical demonstration used **Ansible** to automatically enable **Versioning** on all AWS S3 buckets.
+
+---
+
+# What is a Policy?
+
+A **Policy** is a predefined rule that every resource within an organization must follow.
+
+Examples:
+
+- Every S3 bucket must have Versioning enabled.
+- Every EC2 instance must be tagged.
+- Every EBS volume must be encrypted.
+- Every IAM user must enable Multi-Factor Authentication (MFA).
+- Every Security Group should restrict SSH access.
+
+These policies help maintain:
+
+- Security
+- Compliance
+- Standardization
+- Operational consistency
+
+---
+
+# Why Do We Need Policies?
+
+In a small environment, checking resources manually may be manageable.
+
+However, large organizations manage thousands of cloud resources.
+
+Example:
+
+```text
+15,000 EC2 Instances
+4,000 S3 Buckets
+10,000 IAM Users
+```
+
+Manually verifying every resource is:
+
+- Time consuming
+- Error prone
+- Difficult to maintain
+- Impossible at scale
+
+Automation becomes essential.
+
+---
+
+# What is Policy as Code?
+
+Policy as Code (PaC) is the practice of defining organizational policies in code so they can be automatically enforced across infrastructure.
+
+Instead of manually checking resources, automation verifies and corrects them.
+
+Example:
+
+```text
+Company Policy
+
+↓
+
+Every S3 Bucket must have Versioning Enabled
+
+↓
+
+Automation checks every bucket
+
+↓
+
+If Versioning is Disabled
+
+↓
+
+Enable Versioning Automatically
+```
+
+Policies become executable code.
+
+---
+
+# Why "As Code"?
+
+Infrastructure as Code allows infrastructure to be managed through code.
+
+Similarly,
+
+Policy as Code allows organizational security and compliance rules to be managed through code.
+
+Instead of relying on manual processes, policies become automated and repeatable.
+
+---
+
+# Policy as Code Workflow
+
+```text
+Organization Defines Policy
+        │
+        ▼
+Write Policy in Code
+        │
+        ▼
+Run Automation
+        │
+        ▼
+Inspect Infrastructure
+        │
+        ▼
+Identify Non-Compliant Resources
+        │
+        ▼
+Automatically Fix or Enforce Policy
+```
+
+---
+
+# Why Use Ansible for Policy as Code?
+
+The instructor explains why Ansible is well suited for implementing policies.
+
+## 1. Simple YAML Syntax
+
+Policies can be written using easy-to-read YAML playbooks.
+
+Example:
+
+```yaml
+tasks:
+```
+
+instead of writing lengthy scripts.
+
+---
+
+## 2. Agentless
+
+Ansible communicates directly with cloud APIs or remote servers.
+
+No software needs to be installed on managed resources.
+
+---
+
+## 3. Idempotent
+
+Ansible only makes changes when required.
+
+Example:
+
+If Versioning is already enabled on an S3 bucket,
+
+Ansible reports:
+
+```text
+ok
+```
+
+instead of making unnecessary changes.
+
+This allows policies to be executed repeatedly without affecting compliant resources.
+
+---
+
+# Practical Demonstration
+
+## Objective
+
+Enable Versioning on every AWS S3 bucket.
+
+Company Policy:
+
+```text
+Every S3 Bucket must have Versioning Enabled
+```
+
+---
+
+# Prerequisites
+
+Before running the playbook, the following were required:
+
+- AWS CLI configured
+- Boto3 installed
+- Ansible AWS Collection installed
+
+These allow Ansible to communicate with AWS.
+
+---
+
+# Step 1 - Retrieve All S3 Buckets
+
+The playbook first collected all available S3 buckets.
+
+Module used:
+
+```yaml
+amazon.aws.s3_bucket_info
+```
+
+Execution Flow:
+
+```text
+Ansible
+      │
+      ▼
+AWS API
+      │
+      ▼
+Return All S3 Buckets
+```
+
+Example Output:
+
+```text
+Bucket-1
+Bucket-2
+Bucket-3
+```
+
+---
+
+# Step 2 - Store Bucket Information
+
+The list of buckets is stored inside a variable.
+
+This information is later used by the playbook.
+
+---
+
+# Step 3 - Loop Through Buckets
+
+Instead of configuring every bucket manually,
+
+Ansible loops through each bucket.
+
+Execution Flow:
+
+```text
+Bucket 1
+      │
+      ▼
+Enable Versioning
+
+Bucket 2
+      │
+      ▼
+Enable Versioning
+
+Bucket 3
+      │
+      ▼
+Enable Versioning
+```
+
+Automation handles every bucket automatically.
+
+---
+
+# Final Result
+
+Before Execution:
+
+```text
+Bucket A → Versioning Disabled
+
+Bucket B → Versioning Enabled
+
+Bucket C → Versioning Disabled
+```
+
+After Execution:
+
+```text
+Bucket A → Versioning Enabled
+
+Bucket B → Versioning Enabled
+
+Bucket C → Versioning Enabled
+```
+
+All buckets now comply with the organization's policy.
+
+---
+
+# Real-World Policy Examples
+
+## Example 1
+
+Policy:
+
+```text
+Every EC2 Instance must have Backup Tags
+```
+
+Automation:
+
+```text
+Retrieve EC2 Instances
+
+↓
+
+Check Tags
+
+↓
+
+Missing?
+
+↓
+
+Add Required Tags
+```
+
+---
+
+## Example 2
+
+Policy:
+
+```text
+Every IAM User must have MFA Enabled
+```
+
+Automation:
+
+```text
+Retrieve IAM Users
+
+↓
+
+Verify MFA
+
+↓
+
+Notify or Correct Configuration
+```
+
+---
+
+## Example 3
+
+Policy:
+
+```text
+Every Security Group should restrict SSH access
+```
+
+Automation:
+
+```text
+Retrieve Security Groups
+
+↓
+
+Check Inbound Rules
+
+↓
+
+Modify Non-Compliant Rules
+```
+
+---
+
+## Example 4
+
+Policy:
+
+```text
+Every EBS Volume must be Encrypted
+```
+
+Automation:
+
+```text
+Retrieve Volumes
+
+↓
+
+Verify Encryption
+
+↓
+
+Apply Encryption Policy
+```
+
+---
+
+# Benefits of Policy as Code
+
+- Eliminates repetitive manual work.
+- Enforces organizational standards automatically.
+- Improves infrastructure security.
+- Ensures compliance across all resources.
+- Reduces configuration drift.
+- Scales easily across thousands of cloud resources.
+- Minimizes human error.
+
+---
+
+# Policy as Code vs Manual Management
+
+## Manual Process
+
+```text
+Login to AWS
+
+↓
+
+Open Resource
+
+↓
+
+Verify Configuration
+
+↓
+
+Correct if Necessary
+
+↓
+
+Repeat for Every Resource
+```
+
+---
+
+## Policy as Code
+
+```text
+Run Ansible Playbook
+
+↓
+
+Discover Resources
+
+↓
+
+Verify Compliance
+
+↓
+
+Automatically Apply Required Changes
+```
+
+---
+
+# DevSecOps Perspective
+
+Policy as Code is a core DevSecOps practice.
+
+It integrates:
+
+- Development
+- Security
+- Operations
+
+Security policies become part of the automation pipeline instead of being manually enforced.
+
+---
+
+# Topics Learned in This Session
+
+After completing this session, I learned:
+
+- What a policy is.
+- What Policy as Code (PaC) means.
+- Why organizations automate policy enforcement.
+- How Ansible can implement security and compliance policies.
+- How to retrieve AWS resources using Ansible modules.
+- How to loop through resources and enforce policies.
+- How Policy as Code supports DevSecOps.
+- Why Ansible's idempotent nature is important for policy enforcement.
+
+---
+
+# Interview Questions
+
+## What is Policy as Code?
+
+Policy as Code is the practice of defining security, compliance, and operational policies in code so they can be automatically enforced across infrastructure.
+
+---
+
+## Why is Policy as Code important?
+
+It eliminates manual verification, improves security, ensures compliance, reduces human error, and scales across large infrastructures.
+
+---
+
+## Why is Ansible suitable for Policy as Code?
+
+- Simple YAML syntax
+- Agentless architecture
+- Idempotent execution
+- Excellent cloud integration through collections and modules
+
+---
+
+## What AWS module was demonstrated?
+
+```yaml
+amazon.aws.s3_bucket_info
+```
+
+This module retrieves information about existing AWS S3 buckets.
+
+---
+
+## What policy was implemented?
+
+Automatically enabling Versioning on every AWS S3 bucket.
+
+---
+
+# Key Takeaways
+
+- Policies are organizational rules for security and compliance.
+- Policy as Code converts these rules into automation.
+- Ansible can automatically discover infrastructure resources.
+- Policies can be enforced consistently across all resources.
+- Automation reduces manual effort and improves security.
+- Policy as Code is an important practice in DevSecOps.
+
+---
+
+# One-Line Summary
+
+**Policy as Code (PaC) is the practice of automating organizational security and compliance policies using code, enabling tools like Ansible to continuously discover infrastructure, verify compliance, and automatically enforce the desired state across cloud resources.**
