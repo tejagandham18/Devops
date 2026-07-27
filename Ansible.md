@@ -2617,3 +2617,467 @@ After completing this session, I learned:
 # One-Line Summary
 
 **By default, Ansible decides whether a task has failed. Using `failed_when`, we take control and define our own criteria for determining task failure.**
+
+# Ansible Zero to Hero - Day 9 Notes
+# Topic: Ansible Vault (Securing Sensitive Data)
+
+## Overview
+
+In this session, I learned about **Ansible Vault**, a built-in Ansible feature used to securely store sensitive information such as passwords, API keys, SSH keys, and cloud credentials.
+
+Instead of storing secrets in plain text inside playbooks or variable files, Ansible Vault encrypts them using AES-256 encryption. The encrypted data can only be accessed using the correct vault password.
+
+---
+
+# Why Do We Need Ansible Vault?
+
+Imagine an Ansible playbook that creates AWS EC2 instances.
+
+To create an EC2 instance, we need AWS credentials.
+
+Example:
+
+```yaml
+aws_access_key: AKIAxxxxxxxxxxxxx
+aws_secret_key: xxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+If this file is pushed to GitHub, anyone can view the credentials and misuse the AWS account.
+
+This creates major security risks such as:
+
+- Unauthorized AWS resource creation
+- Deletion of cloud resources
+- Access to sensitive data
+- Increased cloud costs
+
+To avoid exposing secrets, Ansible provides **Vault**.
+
+---
+
+# What is Ansible Vault?
+
+Ansible Vault is a built-in encryption mechanism that encrypts files, variables, or strings containing sensitive information.
+
+Only users with the correct vault password can decrypt and use the data.
+
+It allows developers to safely store secrets inside version control systems like GitHub without exposing confidential information.
+
+---
+
+# How Ansible Vault Works
+
+```text
+Sensitive Information
+        │
+        ▼
+Encrypt Using Vault Password
+        │
+        ▼
+Encrypted File
+        │
+        ▼
+Store in Git Repository
+        │
+        ▼
+Run Playbook
+        │
+        ▼
+Enter Vault Password
+        │
+        ▼
+Secrets Decrypted in Memory
+        │
+        ▼
+Playbook Executes
+```
+
+---
+
+# Creating an Encrypted File
+
+Command:
+
+```bash
+ansible-vault create secrets.yml
+```
+
+Ansible asks for:
+
+```text
+New Vault Password:
+Confirm Vault Password:
+```
+
+After entering the password, a text editor opens.
+
+Example:
+
+```yaml
+aws_access_key: AKIAxxxxxxxx
+aws_secret_key: xxxxxxxxxxxxx
+```
+
+After saving, the file is automatically encrypted.
+
+Encrypted file:
+
+```text
+$ANSIBLE_VAULT;1.1;AES256
+613934623432....
+834acbcfd.....
+```
+
+The original content is no longer readable.
+
+---
+
+# Using Vault in Playbooks
+
+Instead of writing secrets directly inside the playbook,
+
+```yaml
+vars:
+  aws_access_key: AKIAxxxx
+  aws_secret_key: xxxxx
+```
+
+store them in an encrypted file.
+
+Example:
+
+```yaml
+vars_files:
+  - vault/aws_credentials.yml
+```
+
+Run the playbook:
+
+```bash
+ansible-playbook playbook.yml --ask-vault-pass
+```
+
+Execution Flow:
+
+```text
+Run Playbook
+      │
+      ▼
+Prompt for Vault Password
+      │
+      ▼
+Decrypt Secret File
+      │
+      ▼
+Load Variables
+      │
+      ▼
+Execute Tasks
+```
+
+---
+
+# Ansible Vault Commands
+
+## 1. Create
+
+Creates a new encrypted file.
+
+```bash
+ansible-vault create secrets.yml
+```
+
+---
+
+## 2. View
+
+Displays the contents of an encrypted file without permanently decrypting it.
+
+```bash
+ansible-vault view secrets.yml
+```
+
+The file remains encrypted after viewing.
+
+---
+
+## 3. Edit
+
+Edits an encrypted file directly.
+
+```bash
+ansible-vault edit secrets.yml
+```
+
+Execution Flow:
+
+```text
+Encrypted File
+      │
+      ▼
+Enter Password
+      │
+      ▼
+Edit Content
+      │
+      ▼
+Save
+      │
+      ▼
+Automatically Re-encrypted
+```
+
+---
+
+## 4. Encrypt
+
+Encrypts an existing plain-text file.
+
+```bash
+ansible-vault encrypt secrets.yml
+```
+
+Useful when a file was created before Vault was introduced.
+
+---
+
+## 5. Decrypt
+
+Removes encryption from a Vault file.
+
+```bash
+ansible-vault decrypt secrets.yml
+```
+
+The file becomes plain text.
+
+Use this only when absolutely necessary.
+
+---
+
+## 6. Encrypt String
+
+Encrypts only a specific variable instead of the entire file.
+
+Command:
+
+```bash
+ansible-vault encrypt_string
+```
+
+Example Output:
+
+```yaml
+database_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          393733346234....
+```
+
+Useful when only one or two variables are confidential.
+
+---
+
+# Our Project Example
+
+During our AWS Ansible project, we created:
+
+```text
+vault/
+└── aws_credentials.yml
+```
+
+Inside this file we stored:
+
+```yaml
+aws_access_key:
+aws_secret_key:
+aws_region:
+```
+
+Instead of exposing these values inside playbooks.
+
+The playbook loaded them using:
+
+```yaml
+vars_files:
+  - ../vault/aws_credentials.yml
+```
+
+Execution:
+
+```bash
+ansible-playbook playbooks/provision.yml --ask-vault-pass
+```
+
+Ansible decrypts the file temporarily in memory, uses the variables, and never exposes them in plain text.
+
+---
+
+# Why Shouldn't We Store the Vault Password?
+
+Suppose the repository contains:
+
+```text
+project/
+├── vault.yml
+└── vault.pass
+```
+
+Although the secrets are encrypted, the password is also available.
+
+This defeats the purpose of encryption.
+
+Therefore:
+
+**Never commit the vault password file to GitHub.**
+
+---
+
+# Where Should the Vault Password Be Stored?
+
+In production environments, vault passwords are managed using secure secret management systems such as:
+
+- AWS Secrets Manager
+- AWS Systems Manager Parameter Store
+- HashiCorp Vault
+- Azure Key Vault
+- Google Secret Manager
+
+These tools securely store and manage secrets.
+
+---
+
+# Why Use Different Vault Passwords for Different Environments?
+
+Production, Testing, and Development environments should not share the same vault password.
+
+Example:
+
+```text
+Development
+      │
+      ▼
+Vault Password A
+
+-------------------------
+
+Testing
+      │
+      ▼
+Vault Password B
+
+-------------------------
+
+Production
+      │
+      ▼
+Vault Password C
+```
+
+Benefits:
+
+- Limits security risks.
+- Prevents unauthorized production access.
+- Follows the Principle of Least Privilege.
+
+---
+
+# Best Practices
+
+- Never hardcode passwords or API keys in playbooks.
+- Always encrypt sensitive files before pushing to Git.
+- Never store the vault password in the repository.
+- Use strong and random vault passwords.
+- Store vault passwords in dedicated secret management systems.
+- Use separate vault passwords for different environments.
+
+---
+
+# Advantages of Ansible Vault
+
+- Built directly into Ansible.
+- Uses AES-256 encryption.
+- Protects sensitive credentials.
+- Safe to store encrypted files in Git repositories.
+- Easy integration with Ansible playbooks.
+- Supports both file-level and variable-level encryption.
+
+---
+
+# Interview Questions
+
+## What is Ansible Vault?
+
+Ansible Vault is a built-in Ansible feature used to encrypt sensitive data such as passwords, API keys, and secret variables so they can be securely stored and used in playbooks.
+
+---
+
+## Why do we use Ansible Vault?
+
+To protect confidential information from being exposed in source code repositories while allowing playbooks to access those secrets securely.
+
+---
+
+## Can we encrypt only a single variable?
+
+Yes.
+
+Using:
+
+```bash
+ansible-vault encrypt_string
+```
+
+we can encrypt individual variables instead of the entire file.
+
+---
+
+## Is it safe to push Vault files to GitHub?
+
+Yes.
+
+Encrypted Vault files can be stored in GitHub safely.
+
+However, the **vault password must never be stored in the same repository.**
+
+---
+
+## Which encryption algorithm does Ansible Vault use?
+
+Ansible Vault uses **AES-256** encryption.
+
+---
+
+# Commands Learned
+
+```bash
+ansible-vault create secrets.yml
+ansible-vault view secrets.yml
+ansible-vault edit secrets.yml
+ansible-vault encrypt secrets.yml
+ansible-vault decrypt secrets.yml
+ansible-vault encrypt_string
+```
+
+---
+
+# Key Takeaways
+
+After completing this session, I learned:
+
+- Why secret management is important.
+- How Ansible Vault protects sensitive information.
+- How to create encrypted files.
+- How to view and edit encrypted files.
+- How to encrypt existing files.
+- How to encrypt individual variables.
+- How to use encrypted variables inside playbooks.
+- Security best practices for managing secrets.
+- Why vault passwords should never be committed to Git.
+- Why different environments should use different vault passwords.
+
+---
+
+# One-Line Summary
+
+**Ansible Vault is a built-in security feature that encrypts sensitive information such as passwords, API keys, and cloud credentials, allowing them to be stored safely in Ansible projects and version control systems while remaining accessible only to authorized users with the correct vault password.**
