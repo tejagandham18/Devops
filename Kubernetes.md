@@ -621,3 +621,533 @@ Kube Proxy manages networking, routing, and communication between Pods and Servi
 # One-Line Summary
 
 **Kubernetes is an open-source container orchestration platform that automates the deployment, scaling, networking, and management of containerized applications through a Control Plane that manages the cluster and Worker Nodes that execute application workloads.**
+
+# Kubernetes Zero to Hero - Day 2 Notes
+# Topic: Kubernetes Installation & Pods
+
+## Overview
+
+In this session, I learned how to set up a local Kubernetes environment using **Minikube** and understood the most fundamental object in Kubernetes: the **Pod**.
+
+Unlike Docker, where we directly create and manage containers, Kubernetes manages applications through **Pods**, which act as wrappers around one or more containers.
+
+---
+
+# Why Do We Need a Local Kubernetes Cluster?
+
+In real-world environments, Kubernetes clusters are usually deployed on cloud platforms such as:
+
+- AWS Elastic Kubernetes Service (EKS)
+- Azure Kubernetes Service (AKS)
+- Google Kubernetes Engine (GKE)
+
+However, using cloud resources for learning can incur costs.
+
+To avoid these costs, Kubernetes can be installed locally using **Minikube**, allowing developers to practice and test applications on their own computers.
+
+---
+
+# What is Minikube?
+
+**Minikube** is a tool that creates a **single-node Kubernetes cluster** on your local machine.
+
+Instead of manually installing every Kubernetes component, Minikube automatically performs the setup.
+
+When we execute:
+
+```bash
+minikube start
+```
+
+Minikube automatically:
+
+- Creates a Virtual Machine (or Container depending on the driver)
+- Installs Kubernetes
+- Starts the API Server
+- Starts the Scheduler
+- Starts etcd
+- Starts the Controller Manager
+- Creates a Worker Node
+- Makes the cluster ready for use
+
+Flow:
+
+```text
+minikube start
+        │
+        ▼
+Create Local Kubernetes Cluster
+        │
+        ▼
+Start Control Plane Components
+        │
+        ▼
+Create Worker Node
+        │
+        ▼
+Cluster Ready
+```
+
+---
+
+# Minimum Requirements
+
+To run Minikube smoothly, the system should have:
+
+- 2 CPUs
+- 2 GB RAM
+- 20 GB Free Disk Space
+- Hypervisor (VirtualBox, HyperKit, Docker Driver, etc.)
+
+---
+
+# What is a Hypervisor?
+
+A Hypervisor is software that allows a Virtual Machine (VM) to run on your computer.
+
+Example:
+
+```text
+Laptop
+   │
+   ▼
+Hypervisor
+   │
+   ▼
+Virtual Machine
+   │
+   ▼
+Kubernetes Cluster
+```
+
+---
+
+# Tools Required
+
+## 1. Minikube
+
+Minikube creates and manages a local Kubernetes cluster.
+
+It is mainly used for:
+
+- Learning Kubernetes
+- Local Development
+- Testing Applications
+
+---
+
+## 2. kubectl
+
+**kubectl** is the command-line tool used to communicate with the Kubernetes cluster.
+
+Just as Docker uses the `docker` command, Kubernetes uses the `kubectl` command.
+
+Examples:
+
+Docker
+
+```bash
+docker ps
+docker images
+docker run
+```
+
+Kubernetes
+
+```bash
+kubectl get pods
+kubectl get nodes
+kubectl apply -f pod.yaml
+```
+
+---
+
+# Starting the Kubernetes Cluster
+
+Command:
+
+```bash
+minikube start
+```
+
+This command starts the local Kubernetes cluster.
+
+---
+
+# Verifying the Cluster
+
+To verify whether the cluster is running:
+
+```bash
+kubectl get nodes
+```
+
+Example Output:
+
+```text
+NAME         STATUS
+minikube     Ready
+```
+
+If the node status is **Ready**, the cluster has started successfully.
+
+---
+
+# Understanding Pods
+
+A **Pod** is the **smallest deployable unit in Kubernetes**.
+
+Unlike Docker, Kubernetes does **not** manage containers directly.
+
+Instead, Kubernetes manages **Pods**, and Pods contain one or more containers.
+
+---
+
+# Docker vs Kubernetes
+
+## Docker
+
+Docker directly manages containers.
+
+```text
+Docker
+   │
+Container
+```
+
+---
+
+## Kubernetes
+
+Kubernetes manages Pods.
+
+Pods manage Containers.
+
+```text
+Kubernetes
+      │
+      ▼
+     Pod
+      │
+      ▼
+Container
+```
+
+This is one of the biggest differences between Docker and Kubernetes.
+
+---
+
+# What is a Pod?
+
+A Pod is a wrapper around one or more containers.
+
+It provides:
+
+- Shared Network
+- Shared Storage
+- Shared Lifecycle
+
+Containers inside a Pod start together, stop together, and communicate easily with each other.
+
+---
+
+# Single Container Pod
+
+Most applications use one container inside one Pod.
+
+Example:
+
+```text
+Pod
+ │
+ └── Nginx Container
+```
+
+This is the most common deployment pattern.
+
+---
+
+# Multi-Container Pod
+
+Sometimes multiple containers need to work together.
+
+Example:
+
+```text
+Pod
+│
+├── Application Container
+└── Logging Container
+```
+
+Both containers:
+
+- Share the same network
+- Share storage
+- Start together
+- Stop together
+
+This pattern is commonly used for:
+
+- Sidecar Containers
+- Logging Agents
+- Monitoring Agents
+- Init Containers
+
+---
+
+# Why Does Kubernetes Use Pods?
+
+Instead of managing individual containers, Kubernetes groups related containers inside a Pod.
+
+Benefits include:
+
+- Easier Management
+- Shared Resources
+- Better Communication
+- Single Scheduling Unit
+
+This makes application management much simpler in large-scale environments.
+
+---
+
+# Kubernetes Uses YAML Files
+
+Docker usually creates containers using long command-line instructions.
+
+Example:
+
+```bash
+docker run -d -p 80:80 nginx
+```
+
+Kubernetes follows a **Declarative** approach.
+
+Instead of giving long commands, we define the desired configuration inside a YAML file.
+
+Example:
+
+```yaml
+apiVersion: v1
+kind: Pod
+
+metadata:
+  name: nginx-pod
+
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+```
+
+Kubernetes reads this file and creates the Pod automatically.
+
+---
+
+# Imperative vs Declarative
+
+## Docker (Imperative)
+
+We tell Docker **how** to run the application.
+
+Example:
+
+```bash
+docker run nginx
+```
+
+---
+
+## Kubernetes (Declarative)
+
+We describe **what** we want.
+
+Example:
+
+```yaml
+kind: Pod
+```
+
+Kubernetes decides how to achieve the desired state.
+
+---
+
+# Creating a Pod
+
+Command:
+
+```bash
+kubectl apply -f pod.yaml
+```
+
+Execution Flow:
+
+```text
+Developer
+     │
+     ▼
+kubectl apply
+     │
+     ▼
+API Server
+     │
+     ▼
+Scheduler
+     │
+     ▼
+Worker Node
+     │
+     ▼
+Kubelet
+     │
+     ▼
+Container Runtime
+     │
+     ▼
+Pod Created
+```
+
+---
+
+# Pod Limitations
+
+Although Pods are the smallest deployment unit, they are **not recommended for production environments**.
+
+If a Pod crashes:
+
+```text
+Pod
+ │
+Crash
+ │
+ ▼
+Application Down
+```
+
+Kubernetes will **not automatically recreate** a standalone Pod.
+
+---
+
+# How Is This Solved?
+
+Kubernetes introduces higher-level objects called **Deployments**.
+
+A Deployment manages Pods by providing:
+
+- Auto Healing
+- Auto Scaling
+- Rolling Updates
+- Rollbacks
+
+Example:
+
+```text
+Deployment
+      │
+      ▼
+3 Pods
+
+One Pod Crashes
+
+↓
+
+Deployment Creates New Pod
+
+↓
+
+Application Continues Running
+```
+
+Deployments will be covered in upcoming classes.
+
+---
+
+# Docker vs Kubernetes Comparison
+
+| Docker | Kubernetes |
+|---------|------------|
+| Smallest Unit: Container | Smallest Unit: Pod |
+| docker CLI | kubectl CLI |
+| Imperative Commands | Declarative YAML |
+| Manages Containers | Manages Pods |
+| Best for Single Host | Best for Cluster Management |
+
+---
+
+# Topics Learned
+
+After completing today's session, I learned:
+
+- Why we use Minikube
+- Local Kubernetes Installation
+- Hypervisor Basics
+- kubectl
+- Starting a Kubernetes Cluster
+- Verifying Cluster Status
+- What is a Pod
+- Pod Architecture
+- Single Container Pods
+- Multi-Container Pods
+- Why Kubernetes Uses Pods
+- YAML Manifests
+- Imperative vs Declarative Configuration
+- Pod Creation Flow
+- Limitations of Pods
+- Why Deployments Are Needed
+
+---
+
+# Interview Questions
+
+## What is Minikube?
+
+Minikube is a tool that creates a local single-node Kubernetes cluster for development, testing, and learning purposes.
+
+---
+
+## What is kubectl?
+
+kubectl is the command-line interface used to communicate with and manage Kubernetes clusters.
+
+---
+
+## What is a Pod?
+
+A Pod is the smallest deployable unit in Kubernetes. It acts as a wrapper around one or more containers that share networking, storage, and lifecycle.
+
+---
+
+## Why does Kubernetes use Pods instead of directly managing containers?
+
+Pods provide a shared execution environment for one or more closely related containers, making scheduling, networking, and resource sharing easier.
+
+---
+
+## Can a Pod contain multiple containers?
+
+Yes. Although most Pods contain a single container, Kubernetes supports multiple containers within the same Pod when they need to work together closely.
+
+---
+
+## Why are standalone Pods not used in production?
+
+Standalone Pods do not provide features such as auto-healing, auto-scaling, or rolling updates. These capabilities are provided by Deployments.
+
+---
+
+# Key Takeaways
+
+- Minikube creates a local Kubernetes cluster.
+- kubectl is the CLI used to communicate with Kubernetes.
+- Kubernetes manages Pods, not individual containers.
+- Pods wrap one or more containers.
+- YAML files define the desired state of Kubernetes resources.
+- Kubernetes follows a Declarative approach.
+- Standalone Pods are mainly used for learning and testing.
+- Deployments are used in production to manage Pods.
+
+---
+
+# One-Line Summary
+
+**Today's class focused on setting up a local Kubernetes environment using Minikube and understanding Pods, the smallest deployable unit in Kubernetes that encapsulates one or more containers and serves as the foundation for running applications in a Kubernetes cluster.**
