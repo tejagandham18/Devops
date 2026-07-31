@@ -1151,3 +1151,466 @@ Standalone Pods do not provide features such as auto-healing, auto-scaling, or r
 # One-Line Summary
 
 **Today's class focused on setting up a local Kubernetes environment using Minikube and understanding Pods, the smallest deployable unit in Kubernetes that encapsulates one or more containers and serves as the foundation for running applications in a Kubernetes cluster.**
+
+# Kubernetes Zero to Hero - Day 3 Notes
+# Topic: Kubernetes Deployments
+
+## Overview
+
+In this session, I learned about **Deployments**, one of the most important resources in Kubernetes.
+
+Although a **Pod** is the smallest deployable unit in Kubernetes, it is **not suitable for production environments** because it does not provide features like Auto-Healing or Auto-Scaling.
+
+To overcome these limitations, Kubernetes provides **Deployments**, which manage Pods through **ReplicaSets** and ensure applications remain highly available.
+
+---
+
+# Why Do We Need Deployments?
+
+Suppose we create a standalone Pod.
+
+```text
+Pod
+│
+└── Nginx Container
+```
+
+The application is running successfully.
+
+Now imagine the Pod crashes.
+
+```text
+Pod
+│
+❌ Crash
+```
+
+Result:
+
+```text
+Running Pods = 0
+```
+
+The application becomes unavailable because Kubernetes will **not automatically recreate a standalone Pod**.
+
+This is why Deployments are used.
+
+---
+
+# What is a Deployment?
+
+A **Deployment** is a Kubernetes resource that manages the lifecycle of Pods.
+
+It provides:
+
+- Auto Healing
+- Auto Scaling
+- Rolling Updates
+- Rollbacks
+- Desired State Management
+
+Instead of creating Pods directly, we create a Deployment.
+
+---
+
+# Kubernetes Hierarchy
+
+Deployments do not create Pods directly.
+
+The actual hierarchy is:
+
+```text
+Deployment
+      │
+      ▼
+ReplicaSet
+      │
+      ▼
+Pods
+      │
+      ▼
+Containers
+```
+
+Each component has its own responsibility.
+
+---
+
+# Role of Each Component
+
+## Deployment
+
+The Deployment is responsible for:
+
+- Managing ReplicaSets
+- Scaling applications
+- Performing Rolling Updates
+- Performing Rollbacks
+- Maintaining the desired application state
+
+---
+
+## ReplicaSet
+
+The ReplicaSet is responsible for:
+
+- Creating Pods
+- Monitoring Pods
+- Maintaining the required number of Pod replicas
+
+---
+
+## Pod
+
+The Pod is responsible for running one or more containers.
+
+---
+
+## Container
+
+The Container runs the actual application.
+
+Example:
+
+- Nginx
+- Node.js
+- Python Application
+- Java Application
+
+---
+
+# Desired State vs Actual State
+
+This is one of the most important concepts in Kubernetes.
+
+## Desired State
+
+Desired State refers to what the user wants.
+
+Example:
+
+```yaml
+replicas: 3
+```
+
+Meaning:
+
+> "I always want 3 Pods running."
+
+---
+
+## Actual State
+
+Actual State refers to what is currently running inside the cluster.
+
+Initially:
+
+```text
+Pod 1
+
+Pod 2
+
+Pod 3
+```
+
+Desired State = 3 Pods
+
+Actual State = 3 Pods
+
+Everything is working correctly.
+
+---
+
+Suppose Pod 2 crashes.
+
+Now:
+
+```text
+Pod 1
+
+Pod 3
+```
+
+Actual State = 2 Pods
+
+Desired State = 3 Pods
+
+ReplicaSet detects the difference.
+
+```text
+Desired = 3
+
+Actual = 2
+```
+
+ReplicaSet immediately creates a new Pod.
+
+```text
+Pod 1
+
+Pod 2 (New)
+
+Pod 3
+```
+
+Actual State becomes equal to the Desired State.
+
+---
+
+# Auto Healing
+
+Auto Healing means automatically recovering from failures.
+
+Example:
+
+```text
+Deployment
+
+↓
+
+ReplicaSet
+
+↓
+
+3 Pods
+
+↓
+
+One Pod Crashes
+
+↓
+
+ReplicaSet Creates New Pod
+
+↓
+
+Again 3 Pods Running
+```
+
+The application continues running without manual intervention.
+
+---
+
+# Auto Scaling
+
+Deployments also support scaling.
+
+Suppose the application initially requires:
+
+```yaml
+replicas: 3
+```
+
+Later, user traffic increases.
+
+We simply update:
+
+```yaml
+replicas: 6
+```
+
+Kubernetes automatically creates three additional Pods.
+
+Similarly, decreasing the replica count removes unnecessary Pods.
+
+---
+
+# Deployment Workflow
+
+When we execute:
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+The execution flow is:
+
+```text
+Developer
+      │
+      ▼
+kubectl apply
+      │
+      ▼
+API Server
+      │
+      ▼
+Deployment Created
+      │
+      ▼
+Deployment Creates ReplicaSet
+      │
+      ▼
+ReplicaSet Creates Pods
+      │
+      ▼
+Scheduler Selects Worker Node
+      │
+      ▼
+Kubelet Starts Containers
+      │
+      ▼
+Application Running
+```
+
+---
+
+# Why Not Create Pods Directly?
+
+Creating Pods directly has several disadvantages.
+
+- No Auto Healing
+- No Auto Scaling
+- No Rolling Updates
+- No Rollbacks
+- Not suitable for production
+
+Instead, Deployments should be used.
+
+---
+
+# Standalone Pod vs Deployment
+
+| Standalone Pod | Deployment |
+|----------------|------------|
+| Creates a Pod directly | Creates and manages ReplicaSets |
+| No Auto Healing | Supports Auto Healing |
+| No Auto Scaling | Supports Scaling |
+| Suitable for learning/testing | Suitable for production |
+| Manual management | Automated management |
+
+---
+
+# Advantages of Deployments
+
+- Maintains the desired number of Pods
+- Automatically recreates failed Pods
+- Easy scaling by changing replica count
+- Supports Rolling Updates
+- Supports Rollbacks
+- Enterprise-ready
+- High Availability
+
+---
+
+# Real-World Analogy
+
+Imagine a company.
+
+Employees perform the actual work.
+
+A Manager supervises the employees.
+
+If one employee resigns, the manager hires another employee.
+
+Similarly:
+
+```text
+Deployment
+      │
+Manager
+      │
+      ▼
+ReplicaSet
+      │
+Supervisor
+      │
+      ▼
+Pods
+      │
+Employees
+```
+
+The Deployment manages the ReplicaSet, and the ReplicaSet ensures that the required number of Pods are always available.
+
+---
+
+# Docker vs Kubernetes
+
+| Docker | Kubernetes |
+|---------|------------|
+| docker run creates a container | Deployment creates Pods through ReplicaSets |
+| Manual restart if container crashes | Automatic Pod recreation |
+| Manual scaling | Automatic scaling |
+| Single-machine management | Cluster-wide management |
+
+---
+
+# Topics Learned
+
+After completing today's session, I learned:
+
+- What is a Deployment
+- Why Deployments are needed
+- Limitations of Standalone Pods
+- Deployment Architecture
+- ReplicaSets
+- Desired State
+- Actual State
+- Auto Healing
+- Auto Scaling
+- Deployment Workflow
+- Deployment vs Standalone Pod
+
+---
+
+# Interview Questions
+
+## What is a Deployment in Kubernetes?
+
+A Deployment is a Kubernetes resource that manages Pods through ReplicaSets and provides features such as Auto-Healing, Auto-Scaling, Rolling Updates, and Rollbacks.
+
+---
+
+## Why are Deployments used instead of Pods?
+
+Standalone Pods do not automatically recover from failures or support scaling. Deployments solve these problems by managing ReplicaSets and maintaining the desired number of Pods.
+
+---
+
+## What is a ReplicaSet?
+
+A ReplicaSet is responsible for creating and maintaining the required number of Pod replicas. If a Pod fails, it automatically creates a replacement Pod.
+
+---
+
+## What is Desired State?
+
+Desired State is the configuration defined by the user, such as the number of Pod replicas that should always be running.
+
+---
+
+## What is Actual State?
+
+Actual State is the current condition of the Kubernetes cluster, including the number of Pods that are actually running.
+
+---
+
+## What is Auto Healing?
+
+Auto Healing is the ability of Kubernetes to automatically recreate failed Pods so that the actual state matches the desired state.
+
+---
+
+## What is Auto Scaling?
+
+Auto Scaling allows Kubernetes to increase or decrease the number of Pods based on the configured replica count or workload requirements.
+
+---
+
+# Key Takeaways
+
+- Pods are the smallest deployable unit in Kubernetes.
+- Standalone Pods are not suitable for production.
+- Deployments manage applications through ReplicaSets.
+- ReplicaSets maintain the desired number of Pods.
+- Desired State is defined by the user.
+- Actual State is continuously monitored by Kubernetes.
+- If a Pod crashes, ReplicaSet automatically creates a replacement.
+- Deployments provide Auto-Healing, Auto-Scaling, Rolling Updates, and Rollbacks.
+
+---
+
+# One-Line Summary
+
+**A Deployment is a Kubernetes resource that manages ReplicaSets and Pods, ensuring the application's desired state is maintained through features like Auto-Healing, Auto-Scaling, Rolling Updates, and Rollbacks, making it the standard way to run applications in production.**
