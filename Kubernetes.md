@@ -1614,3 +1614,734 @@ Auto Scaling allows Kubernetes to increase or decrease the number of Pods based 
 # One-Line Summary
 
 **A Deployment is a Kubernetes resource that manages ReplicaSets and Pods, ensuring the application's desired state is maintained through features like Auto-Healing, Auto-Scaling, Rolling Updates, and Rollbacks, making it the standard way to run applications in production.**
+
+
+# Kubernetes Zero to Hero - Day 4 Notes
+# Topic: Kubernetes Services
+
+## Overview
+
+In this session, I learned about **Kubernetes Services**, which provide a stable way to access applications running inside a Kubernetes cluster.
+
+Pods are **ephemeral**, meaning they can be restarted, recreated, or deleted at any time. Because of this, their IP addresses change frequently, making it unreliable to access Pods directly.
+
+A **Service** solves this problem by providing a **stable network endpoint** that routes traffic to the correct Pods.
+
+---
+
+# Why Do We Need a Service?
+
+Suppose we have a Deployment with three Pods.
+
+```text
+Deployment
+      │
+      ▼
+ReplicaSet
+      │
+      ▼
+Pod 1 → 10.244.1.5
+
+Pod 2 → 10.244.1.8
+
+Pod 3 → 10.244.1.10
+```
+
+A user accesses:
+
+```text
+10.244.1.5
+```
+
+Everything works.
+
+Now Pod 1 crashes.
+
+ReplicaSet automatically creates a new Pod.
+
+```text
+Old Pod
+
+10.244.1.5 ❌
+
+↓
+
+New Pod
+
+10.244.1.25
+```
+
+The old IP no longer exists.
+
+Any application trying to access the old IP will fail.
+
+This is why Kubernetes introduces **Services**.
+
+---
+
+# What is a Kubernetes Service?
+
+A Service is a Kubernetes resource that provides a **stable IP address and DNS name** for accessing one or more Pods.
+
+Instead of communicating directly with Pod IP addresses, applications communicate with the Service.
+
+Flow:
+
+```text
+Users
+   │
+   ▼
+Service
+   │
+   ▼
+Pods
+```
+
+The Service remains constant even if Pods are recreated.
+
+---
+
+# Responsibilities of a Service
+
+A Kubernetes Service provides three major functionalities:
+
+- Load Balancing
+- Service Discovery
+- Exposing Applications
+
+---
+
+# 1. Load Balancing
+
+Load Balancing means distributing incoming requests evenly across multiple Pods.
+
+Suppose a Deployment creates three Pods.
+
+```text
+Pod 1
+
+Pod 2
+
+Pod 3
+```
+
+If 300 users access the application, sending all traffic to one Pod would overload it.
+
+Without Load Balancing:
+
+```text
+300 Users
+
+↓
+
+Pod 1 ❌
+
+Pod 2 (Idle)
+
+Pod 3 (Idle)
+```
+
+With Load Balancing:
+
+```text
+            Service
+               │
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+  Pod 1      Pod 2      Pod 3
+```
+
+Traffic distribution:
+
+```text
+User 1 → Pod 1
+
+User 2 → Pod 2
+
+User 3 → Pod 3
+
+User 4 → Pod 1
+
+User 5 → Pod 2
+
+User 6 → Pod 3
+```
+
+Benefits:
+
+- Better Performance
+- Even Resource Utilization
+- High Availability
+- Prevents Overloading
+
+---
+
+# Real-World Example
+
+Imagine a supermarket.
+
+One cashier:
+
+```text
+100 Customers
+
+↓
+
+Cashier 1
+```
+
+Long waiting time.
+
+Three cashiers:
+
+```text
+100 Customers
+
+↓
+
+Cashier 1
+
+Cashier 2
+
+Cashier 3
+```
+
+Customers are distributed evenly.
+
+Kubernetes Services work the same way.
+
+---
+
+# 2. Service Discovery
+
+Pods are temporary.
+
+Whenever a Pod restarts, its IP address changes.
+
+Example:
+
+```text
+Backend Pod
+
+↓
+
+10.244.1.5
+```
+
+After restart:
+
+```text
+10.244.1.20
+```
+
+If another application is using the old IP, communication fails.
+
+Instead, Kubernetes provides a Service.
+
+Example:
+
+```text
+Frontend
+
+↓
+
+backend-service
+
+↓
+
+Backend Pods
+```
+
+Applications communicate using the Service name instead of Pod IP addresses.
+
+Benefits:
+
+- Stable Communication
+- No Need to Track Pod IPs
+- Reliable Networking
+
+---
+
+# Real-World Example
+
+Instead of calling an employee directly, customers call the company's customer care number.
+
+Employees may change.
+
+The customer care number remains the same.
+
+Similarly:
+
+```text
+Applications
+
+↓
+
+Service
+
+↓
+
+Pods
+```
+
+---
+
+# 3. Exposing Applications
+
+Pods are only accessible inside the Kubernetes cluster.
+
+To allow communication, Kubernetes provides different Service types.
+
+---
+
+# Service Types
+
+## 1. ClusterIP
+
+ClusterIP is the default Service type.
+
+It allows communication **only inside the Kubernetes cluster**.
+
+Example:
+
+```text
+Frontend Pod
+
+↓
+
+ClusterIP Service
+
+↓
+
+Backend Pods
+```
+
+Internet users cannot access the application.
+
+Use Cases:
+
+- Backend APIs
+- Databases
+- Redis
+- Internal Microservices
+
+Diagram:
+
+```text
+Internet
+
+❌
+
+---------------------------
+
+Kubernetes Cluster
+
+↓
+
+ClusterIP Service
+
+↓
+
+Backend Pods
+```
+
+---
+
+## 2. NodePort
+
+NodePort exposes the application on a specific port of every Worker Node.
+
+Example:
+
+```text
+Worker Node
+
+192.168.1.20:30080
+```
+
+Anyone who has access to the Worker Node can access the application.
+
+Flow:
+
+```text
+User
+
+↓
+
+Worker Node
+
+↓
+
+NodePort
+
+↓
+
+Pods
+```
+
+Example URL:
+
+```
+http://192.168.1.20:30080
+```
+
+Use Cases:
+
+- Local Testing
+- Learning Kubernetes
+- Small Applications
+
+---
+
+## 3. LoadBalancer
+
+LoadBalancer is mainly used in cloud environments such as:
+
+- AWS EKS
+- Azure AKS
+- Google GKE
+
+When we create:
+
+```yaml
+type: LoadBalancer
+```
+
+The cloud provider automatically provisions a Load Balancer.
+
+Flow:
+
+```text
+Internet
+
+↓
+
+Cloud Load Balancer
+
+↓
+
+Kubernetes Service
+
+↓
+
+Pods
+```
+
+Benefits:
+
+- Public IP Address
+- External Access
+- Automatic Load Balancing
+
+Use Cases:
+
+- Production Applications
+- Public Websites
+- Enterprise Systems
+
+---
+
+# How Does a Service Know Which Pods to Send Traffic To?
+
+Services identify Pods using **Labels** and **Selectors**.
+
+---
+
+## Step 1: Labels
+
+Each Pod contains labels.
+
+Example:
+
+```yaml
+metadata:
+  labels:
+    app: nginx
+```
+
+Suppose we have:
+
+```text
+Pod 1
+
+app = nginx
+
+----------------
+
+Pod 2
+
+app = nginx
+
+----------------
+
+Pod 3
+
+app = nginx
+```
+
+---
+
+## Step 2: Selector
+
+The Service defines a selector.
+
+Example:
+
+```yaml
+selector:
+  app: nginx
+```
+
+The Service compares the selector with Pod labels.
+
+Matching Pods receive traffic.
+
+Flow:
+
+```text
+Service
+
+↓
+
+Selector
+
+app = nginx
+
+↓
+
+Pod 1 ✔
+
+Pod 2 ✔
+
+Pod 3 ✔
+```
+
+---
+
+## What Happens If Labels Don't Match?
+
+Suppose:
+
+```text
+Pod 1
+
+app = nginx ✔
+
+----------------
+
+Pod 2
+
+app = nginx ✔
+
+----------------
+
+Pod 3
+
+app = apache ❌
+```
+
+Service:
+
+```yaml
+selector:
+  app: nginx
+```
+
+Traffic is sent only to:
+
+```text
+Pod 1
+
+Pod 2
+```
+
+Pod 3 is ignored because its label does not match.
+
+---
+
+# Complete Request Flow
+
+Suppose a user accesses the application.
+
+```text
+Browser
+     │
+     ▼
+LoadBalancer / NodePort
+     │
+     ▼
+Kubernetes Service
+     │
+Selector: app=nginx
+     │
+     ▼
+Pod 1
+
+Pod 2
+
+Pod 3
+```
+
+The Service automatically distributes traffic among the matching Pods.
+
+---
+
+# Kubernetes Workflow So Far
+
+After completing today's class, the Kubernetes workflow looks like this:
+
+```text
+Deployment
+      │
+      ▼
+ReplicaSet
+      │
+      ▼
+Pods
+      │
+      ▼
+Service
+      │
+      ▼
+Users
+```
+
+Cloud Deployment:
+
+```text
+Internet
+      │
+      ▼
+Cloud Load Balancer
+      │
+      ▼
+Kubernetes Service
+      │
+      ▼
+Pods
+```
+
+---
+
+# KubeShark
+
+KubeShark is a network monitoring and visualization tool for Kubernetes.
+
+It helps developers:
+
+- Monitor network traffic
+- View communication between Pods
+- Debug Service requests
+- Analyze request and response flow
+
+It is similar to Wireshark but designed specifically for Kubernetes environments.
+
+---
+
+# Docker vs Kubernetes Networking
+
+| Docker | Kubernetes |
+|---------|------------|
+| Access Container IP | Access Service |
+| Container IP | Stable Service IP/DNS |
+| Manual Networking | Automatic Networking |
+| Manual Load Balancing | Built-in Load Balancing |
+
+---
+
+# Topics Learned
+
+After completing today's session, I learned:
+
+- Why Kubernetes Services are required
+- Problems with Pod IP addresses
+- What is a Service
+- Load Balancing
+- Service Discovery
+- Exposing Applications
+- ClusterIP
+- NodePort
+- LoadBalancer
+- Labels
+- Selectors
+- Request Flow
+- KubeShark
+
+---
+
+# Interview Questions
+
+## What is a Kubernetes Service?
+
+A Kubernetes Service provides a stable network endpoint for accessing one or more Pods, regardless of changes to Pod IP addresses.
+
+---
+
+## Why do we need Services?
+
+Pods are ephemeral and their IP addresses change when they are recreated. Services provide a stable way to access applications.
+
+---
+
+## What is Load Balancing?
+
+Load Balancing distributes incoming requests across multiple Pods to improve performance and availability.
+
+---
+
+## What is Service Discovery?
+
+Service Discovery allows applications to communicate using a stable Service name instead of changing Pod IP addresses.
+
+---
+
+## What are the three main Service types?
+
+- ClusterIP
+- NodePort
+- LoadBalancer
+
+---
+
+## What is ClusterIP?
+
+ClusterIP exposes the application only inside the Kubernetes cluster.
+
+---
+
+## What is NodePort?
+
+NodePort exposes the application on a fixed port of every Worker Node.
+
+---
+
+## What is LoadBalancer?
+
+LoadBalancer requests the cloud provider to create an external Load Balancer, allowing public access to the application.
+
+---
+
+## How does a Service identify Pods?
+
+A Service uses **Selectors** to match **Labels** defined on Pods.
+
+Only matching Pods receive traffic.
+
+---
+
+# Key Takeaways
+
+- Pods have temporary IP addresses.
+- Services provide a stable IP and DNS name.
+- Services distribute traffic using Load Balancing.
+- Services allow applications to discover each other using Service Discovery.
+- ClusterIP is used for internal communication.
+- NodePort exposes applications through Worker Nodes.
+- LoadBalancer exposes applications publicly using cloud infrastructure.
+- Labels and Selectors connect Services to the correct Pods.
+
+---
+
+# One-Line Summary
+
+**A Kubernetes Service provides a stable network endpoint that enables load balancing, service discovery, and application exposure by routing traffic to the correct Pods using labels and selectors, even when Pods are recreated or scaled.**
