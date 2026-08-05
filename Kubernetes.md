@@ -3664,3 +3664,821 @@ kube-proxy manages networking rules and routes incoming Service traffic to the c
 # One-Line Summary
 
 **Today's session focused on using Kubeshark to visualize Kubernetes networking, demonstrating how Services, kube-proxy, and Pods work together to provide service discovery, load balancing, application exposure, and end-to-end packet flow analysis inside a Kubernetes cluster.**
+
+# Kubernetes Zero to Hero - Day 6 Notes
+# Topic: Kubernetes Ingress & Ingress Controller
+
+## Overview
+
+In this session, I learned about **Kubernetes Ingress**, one of the most important networking components used in production Kubernetes clusters.
+
+Before Ingress, applications were exposed using **NodePort** or **LoadBalancer** Services. Although these methods work, they become expensive and difficult to manage when multiple applications need external access.
+
+Ingress solves this problem by providing a **single entry point** that intelligently routes incoming HTTP/HTTPS traffic to different Services inside the Kubernetes cluster.
+
+---
+
+# Recap
+
+So far, the Kubernetes workflow looks like this:
+
+```text
+Deployment
+      │
+      ▼
+ReplicaSet
+      │
+      ▼
+Pods
+      │
+      ▼
+Service
+```
+
+Users access applications through a Service.
+
+For external access, we usually create:
+
+```yaml
+type: LoadBalancer
+```
+
+or
+
+```yaml
+type: NodePort
+```
+
+---
+
+# Problem Before Ingress
+
+Suppose a company has five applications.
+
+- Shopping
+- Payments
+- Orders
+- Inventory
+- Customer Support
+
+Without Ingress:
+
+```text
+Internet
+    │
+    ▼
+LoadBalancer
+    │
+Shopping Service
+    │
+Shopping Pods
+```
+
+```text
+Internet
+    │
+    ▼
+LoadBalancer
+    │
+Payment Service
+    │
+Payment Pods
+```
+
+```text
+Internet
+    │
+    ▼
+LoadBalancer
+    │
+Orders Service
+    │
+Orders Pods
+```
+
+Each application requires:
+
+- One Service
+- One LoadBalancer
+- One Public IP
+
+---
+
+# Problems with LoadBalancer Services
+
+Using a separate LoadBalancer for every application creates several challenges.
+
+### 1. Higher Cost
+
+Cloud providers charge for each LoadBalancer.
+
+Example:
+
+```text
+Shopping
+
+↓
+
+LoadBalancer
+
+↓
+
+Public IP
+
+₹₹₹
+```
+
+```text
+Payments
+
+↓
+
+LoadBalancer
+
+↓
+
+Public IP
+
+₹₹₹
+```
+
+```text
+Orders
+
+↓
+
+LoadBalancer
+
+↓
+
+Public IP
+
+₹₹₹
+```
+
+As applications increase, infrastructure costs also increase.
+
+---
+
+### 2. Multiple Public IPs
+
+Without Ingress:
+
+```text
+Shopping
+
+54.10.10.10
+
+-------------------
+
+Payments
+
+54.10.10.11
+
+-------------------
+
+Orders
+
+54.10.10.12
+```
+
+Users must remember different IPs or domains.
+
+This is not ideal.
+
+---
+
+### 3. Difficult Management
+
+Managing multiple LoadBalancers becomes increasingly difficult.
+
+For example:
+
+- SSL Certificates
+- Security Rules
+- Firewall Configuration
+- DNS Management
+
+Everything has to be configured separately.
+
+---
+
+# What is Ingress?
+
+Ingress is a Kubernetes resource that defines **routing rules** for incoming HTTP and HTTPS traffic.
+
+It does **not** expose applications by itself.
+
+Instead, it tells Kubernetes:
+
+- Which request should go where.
+- Which Service should receive the request.
+
+Think of Ingress as a **traffic rulebook**.
+
+---
+
+# Important Point
+
+Ingress is **NOT** a LoadBalancer.
+
+Ingress is simply a YAML configuration containing routing rules.
+
+Example:
+
+```text
+If URL = /shop
+
+↓
+
+Shopping Service
+```
+
+```text
+If URL = /payment
+
+↓
+
+Payment Service
+```
+
+```text
+If URL = /orders
+
+↓
+
+Orders Service
+```
+
+Ingress itself does not process traffic.
+
+---
+
+# What is an Ingress Controller?
+
+An Ingress Controller is an application running inside Kubernetes.
+
+It continuously watches for Ingress resources.
+
+Whenever an Ingress YAML is created or modified, the controller updates its routing configuration automatically.
+
+Without an Ingress Controller:
+
+```text
+Ingress YAML
+
+↓
+
+Nothing Happens
+```
+
+Because nobody is reading the rules.
+
+---
+
+# Popular Ingress Controllers
+
+Some commonly used Ingress Controllers include:
+
+- NGINX Ingress Controller
+- HAProxy Ingress Controller
+- Traefik
+- F5 BIG-IP Controller
+- AWS Load Balancer Controller
+
+The choice depends on the organization's requirements.
+
+---
+
+# How Does Ingress Work?
+
+Step 1
+
+Deploy an Ingress Controller.
+
+```text
+Internet
+
+↓
+
+Ingress Controller
+```
+
+---
+
+Step 2
+
+Create an Ingress Resource.
+
+Example:
+
+```yaml
+kind: Ingress
+```
+
+This file contains routing rules.
+
+---
+
+Step 3
+
+Ingress Controller detects the new Ingress Resource.
+
+```text
+Ingress YAML
+
+↓
+
+Ingress Controller
+
+↓
+
+Routing Rules Updated
+```
+
+---
+
+Step 4
+
+Incoming traffic is routed to the correct Service.
+
+---
+
+# Complete Workflow
+
+```text
+Browser
+
+↓
+
+Cloud LoadBalancer
+
+↓
+
+Ingress Controller
+
+↓
+
+Ingress Rules
+
+↓
+
+Service
+
+↓
+
+Pods
+
+↓
+
+Application
+```
+
+---
+
+# Path-Based Routing
+
+Path-Based Routing routes requests based on the URL path.
+
+Example:
+
+```text
+example.com/shop
+
+↓
+
+Shopping Service
+```
+
+```text
+example.com/payment
+
+↓
+
+Payment Service
+```
+
+```text
+example.com/orders
+
+↓
+
+Orders Service
+```
+
+One domain.
+
+Different paths.
+
+Different applications.
+
+---
+
+## Flow
+
+```text
+Browser
+
+↓
+
+example.com/payment
+
+↓
+
+Ingress Controller
+
+↓
+
+Payment Service
+
+↓
+
+Payment Pods
+```
+
+---
+
+# Host-Based Routing
+
+Host-Based Routing routes requests based on the hostname.
+
+Example:
+
+```text
+shop.example.com
+
+↓
+
+Shopping Service
+```
+
+```text
+payment.example.com
+
+↓
+
+Payment Service
+```
+
+```text
+admin.example.com
+
+↓
+
+Admin Service
+```
+
+Different subdomains.
+
+Different Services.
+
+---
+
+## Flow
+
+```text
+Browser
+
+↓
+
+shop.example.com
+
+↓
+
+Ingress Controller
+
+↓
+
+Shopping Service
+
+↓
+
+Shopping Pods
+```
+
+---
+
+# Why Enterprises Prefer Ingress
+
+Ingress provides several enterprise-level advantages.
+
+## Cost Reduction
+
+Instead of:
+
+```text
+5 Applications
+
+↓
+
+5 LoadBalancers
+
+↓
+
+5 Public IPs
+```
+
+Ingress allows:
+
+```text
+5 Applications
+
+↓
+
+1 LoadBalancer
+
+↓
+
+1 Public IP
+```
+
+This significantly reduces cloud costs.
+
+---
+
+## Centralized Traffic Management
+
+All incoming traffic is managed from one place.
+
+This simplifies:
+
+- Routing
+- Security
+- SSL Certificates
+- Monitoring
+
+---
+
+## Better Security
+
+Ingress supports:
+
+- HTTPS
+- TLS Certificates
+- Authentication
+- Rate Limiting
+
+This improves application security.
+
+---
+
+## Advanced Routing
+
+Ingress supports:
+
+- Path-Based Routing
+- Host-Based Routing
+- URL Rewriting
+- Traffic Splitting
+
+These features are commonly used in enterprise environments.
+
+---
+
+# Real-Life Example
+
+Imagine a shopping mall.
+
+Without Ingress:
+
+Each shop has its own entrance.
+
+```text
+Shopping
+
+Own Entrance
+```
+
+```text
+Cinema
+
+Own Entrance
+```
+
+```text
+Restaurant
+
+Own Entrance
+```
+
+Expensive.
+
+Hard to manage.
+
+---
+
+With Ingress:
+
+```text
+Main Entrance
+
+↓
+
+Security Desk
+
+↓
+
+Shopping
+
+Cinema
+
+Restaurant
+```
+
+One entrance.
+
+Visitors are directed to the correct shop.
+
+Ingress works exactly like this.
+
+---
+
+# LoadBalancer vs Ingress
+
+| LoadBalancer | Ingress |
+|--------------|---------|
+| Exposes one Service | Routes traffic to multiple Services |
+| One Public IP per Service | One Public IP for many Services |
+| Basic Load Balancing | Advanced Routing |
+| Expensive for many applications | Cost-effective |
+| No Path-Based Routing | Supports Path-Based Routing |
+| No Host-Based Routing | Supports Host-Based Routing |
+
+---
+
+# Ingress vs Ingress Controller
+
+## Ingress
+
+- Kubernetes Resource
+- YAML Configuration
+- Contains Routing Rules
+- Does Not Handle Traffic
+
+Example:
+
+```yaml
+kind: Ingress
+```
+
+---
+
+## Ingress Controller
+
+- Kubernetes Application
+- Watches Ingress Resources
+- Applies Routing Rules
+- Handles Incoming Traffic
+
+Without an Ingress Controller, an Ingress resource has no effect.
+
+---
+
+# Complete Kubernetes Architecture
+
+```text
+                      Internet
+                          │
+                          ▼
+                Cloud LoadBalancer
+                          │
+                          ▼
+                 Ingress Controller
+                          │
+                Reads Ingress Rules
+                          │
+         ┌────────────────┼────────────────┐
+         ▼                ▼                ▼
+ Shopping Service   Payment Service   Orders Service
+         │                │                │
+         ▼                ▼                ▼
+ Shopping Pods      Payment Pods      Orders Pods
+```
+
+---
+
+# Advantages of Ingress
+
+- Single Entry Point
+- Lower Cloud Cost
+- Advanced Routing
+- HTTPS Support
+- Centralized Management
+- Better Scalability
+- Enterprise Ready
+- Easier Maintenance
+
+---
+
+# Topics Learned
+
+After today's session, I learned:
+
+- Why Ingress is Needed
+- Limitations of LoadBalancer Services
+- What is Ingress
+- What is an Ingress Controller
+- Popular Ingress Controllers
+- How Ingress Works
+- Path-Based Routing
+- Host-Based Routing
+- Complete Request Flow
+- Enterprise Advantages of Ingress
+- Ingress vs LoadBalancer
+- Ingress vs Ingress Controller
+
+---
+
+# Interview Questions
+
+## What is Kubernetes Ingress?
+
+Ingress is a Kubernetes resource that defines routing rules for external HTTP and HTTPS traffic to Services inside the cluster.
+
+---
+
+## What is an Ingress Controller?
+
+An Ingress Controller is an application that watches Ingress resources and implements the routing rules defined in them.
+
+---
+
+## Why do we need Ingress?
+
+Ingress allows multiple applications to share a single external entry point, reducing infrastructure cost and providing advanced routing capabilities.
+
+---
+
+## What are the advantages of Ingress?
+
+- Cost Reduction
+- Centralized Traffic Management
+- HTTPS Support
+- Path-Based Routing
+- Host-Based Routing
+- Better Security
+
+---
+
+## What is Path-Based Routing?
+
+Routing requests based on the URL path.
+
+Example:
+
+```text
+example.com/orders
+
+↓
+
+Orders Service
+```
+
+---
+
+## What is Host-Based Routing?
+
+Routing requests based on the hostname.
+
+Example:
+
+```text
+orders.example.com
+
+↓
+
+Orders Service
+```
+
+---
+
+## Difference between LoadBalancer and Ingress?
+
+A LoadBalancer exposes a single Service externally.
+
+Ingress provides intelligent routing to multiple Services using a single external entry point.
+
+---
+
+## Difference between Ingress and Ingress Controller?
+
+Ingress is a Kubernetes resource containing routing rules.
+
+Ingress Controller is the application that watches those rules and routes traffic accordingly.
+
+---
+
+# Key Takeaways
+
+- Ingress is a routing resource, not a LoadBalancer.
+- An Ingress Controller is required for Ingress to function.
+- Ingress reduces cloud costs by allowing multiple applications to share a single LoadBalancer.
+- It supports Path-Based and Host-Based routing.
+- Ingress is the standard method for exposing HTTP/HTTPS applications in production Kubernetes environments.
+- Most enterprise Kubernetes clusters use an Ingress Controller such as NGINX or HAProxy.
+
+---
+
+# One-Line Summary
+
+**Kubernetes Ingress provides a centralized and cost-effective way to expose multiple applications through a single external entry point by using an Ingress Controller to route HTTP/HTTPS traffic to the appropriate Services based on hostnames or URL paths.**
