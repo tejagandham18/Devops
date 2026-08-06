@@ -5237,3 +5237,709 @@ Base64 is an encoding mechanism, not strong encryption. It only changes the repr
 # One-Line Summary
 
 **ConfigMaps and Secrets separate application configuration from application code, allowing Kubernetes applications to receive configuration dynamically while securely managing sensitive credentials without rebuilding Docker images, making deployments flexible, secure, and production-ready.**
+
+# Kubernetes Zero to Hero - Kubernetes Commands Cheat Sheet
+
+## Overview
+
+This document contains the most commonly used **Kubernetes (`kubectl`) commands** that every DevOps Engineer should know. These commands are used daily for creating, managing, monitoring, and troubleshooting Kubernetes resources.
+
+---
+
+# 1. Cluster Commands
+
+## Check Cluster Information
+
+```bash
+kubectl cluster-info
+```
+
+Displays information about the Kubernetes cluster.
+
+---
+
+## Check Kubernetes Version
+
+```bash
+kubectl version
+```
+
+Displays both Client and Server versions.
+
+---
+
+## View All Worker Nodes
+
+```bash
+kubectl get nodes
+```
+
+Example Output:
+
+```text
+NAME        STATUS   ROLES           AGE
+minikube    Ready    control-plane   5d
+```
+
+---
+
+## View Detailed Node Information
+
+```bash
+kubectl describe node <node-name>
+```
+
+Example:
+
+```bash
+kubectl describe node minikube
+```
+
+Displays:
+
+- CPU
+- Memory
+- Labels
+- Taints
+- Events
+- Conditions
+
+---
+
+# 2. Pod Commands
+
+## View All Pods
+
+```bash
+kubectl get pods
+```
+
+Lists all Pods in the current namespace.
+
+---
+
+## View Pods with More Information
+
+```bash
+kubectl get pods -o wide
+```
+
+Displays:
+
+- Pod IP
+- Node Name
+- Status
+- Container Image
+
+---
+
+## View Pod Details
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+Example:
+
+```bash
+kubectl describe pod nginx-pod
+```
+
+Shows:
+
+- Labels
+- Events
+- Container Details
+- Mounted Volumes
+- IP Address
+- Resource Usage
+
+---
+
+## View Pod Logs
+
+```bash
+kubectl logs <pod-name>
+```
+
+Example:
+
+```bash
+kubectl logs nginx-pod
+```
+
+Used to troubleshoot application issues.
+
+---
+
+## Login Inside a Pod
+
+```bash
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+Example:
+
+```bash
+kubectl exec -it nginx-pod -- /bin/bash
+```
+
+Allows access to the running container.
+
+---
+
+## Delete a Pod
+
+```bash
+kubectl delete pod <pod-name>
+```
+
+Example:
+
+```bash
+kubectl delete pod nginx-pod
+```
+
+If managed by a Deployment, Kubernetes automatically recreates it.
+
+---
+
+# 3. Deployment Commands
+
+## View Deployments
+
+```bash
+kubectl get deployments
+```
+
+Lists all Deployments.
+
+---
+
+## Describe Deployment
+
+```bash
+kubectl describe deployment <deployment-name>
+```
+
+Example:
+
+```bash
+kubectl describe deployment nginx
+```
+
+Shows Deployment configuration and events.
+
+---
+
+## Scale a Deployment
+
+```bash
+kubectl scale deployment nginx --replicas=5
+```
+
+Changes the number of Pod replicas.
+
+---
+
+## Restart a Deployment
+
+```bash
+kubectl rollout restart deployment nginx
+```
+
+Restarts all Pods without deleting the Deployment.
+
+---
+
+## Check Rollout Status
+
+```bash
+kubectl rollout status deployment nginx
+```
+
+Shows deployment progress.
+
+---
+
+## Rollback Deployment
+
+```bash
+kubectl rollout undo deployment nginx
+```
+
+Reverts to the previous Deployment version.
+
+---
+
+# 4. Service Commands
+
+## View Services
+
+```bash
+kubectl get services
+```
+
+or
+
+```bash
+kubectl get svc
+```
+
+Lists all Kubernetes Services.
+
+---
+
+## Describe a Service
+
+```bash
+kubectl describe service <service-name>
+```
+
+Example:
+
+```bash
+kubectl describe service nginx-service
+```
+
+Shows:
+
+- Cluster IP
+- Endpoints
+- Ports
+- Labels
+
+---
+
+# 5. Namespace Commands
+
+## View Namespaces
+
+```bash
+kubectl get namespaces
+```
+
+or
+
+```bash
+kubectl get ns
+```
+
+---
+
+## Create Namespace
+
+```bash
+kubectl create namespace dev
+```
+
+---
+
+## Delete Namespace
+
+```bash
+kubectl delete namespace dev
+```
+
+---
+
+## View Resources Inside a Namespace
+
+```bash
+kubectl get pods -n dev
+```
+
+---
+
+# 6. ConfigMap Commands
+
+## View ConfigMaps
+
+```bash
+kubectl get configmaps
+```
+
+---
+
+## Describe ConfigMap
+
+```bash
+kubectl describe configmap app-config
+```
+
+---
+
+## Delete ConfigMap
+
+```bash
+kubectl delete configmap app-config
+```
+
+---
+
+# 7. Secret Commands
+
+## View Secrets
+
+```bash
+kubectl get secrets
+```
+
+---
+
+## Describe Secret
+
+```bash
+kubectl describe secret db-secret
+```
+
+---
+
+## View Secret YAML
+
+```bash
+kubectl get secret db-secret -o yaml
+```
+
+Secrets are displayed in Base64 format.
+
+---
+
+# 8. Ingress Commands
+
+## View Ingress
+
+```bash
+kubectl get ingress
+```
+
+---
+
+## Describe Ingress
+
+```bash
+kubectl describe ingress app-ingress
+```
+
+Displays:
+
+- Rules
+- Hosts
+- Backend Services
+- Events
+
+---
+
+# 9. Resource Management Commands
+
+## Create or Update Resources
+
+```bash
+kubectl apply -f file.yaml
+```
+
+Most commonly used command.
+
+Reads a YAML file and creates or updates the resource.
+
+---
+
+## Create Resources
+
+```bash
+kubectl create -f file.yaml
+```
+
+Creates a resource only if it doesn't already exist.
+
+---
+
+## Replace Resources
+
+```bash
+kubectl replace -f file.yaml
+```
+
+Replaces an existing resource.
+
+---
+
+## Delete Resources
+
+```bash
+kubectl delete -f file.yaml
+```
+
+Deletes resources defined in the YAML file.
+
+---
+
+# 10. View Everything
+
+```bash
+kubectl get all
+```
+
+Displays:
+
+- Pods
+- Services
+- Deployments
+- ReplicaSets
+
+One of the most useful troubleshooting commands.
+
+---
+
+# 11. Events
+
+## View Events
+
+```bash
+kubectl get events
+```
+
+Shows cluster events like:
+
+- Failed Scheduling
+- Pod Creation
+- Image Pull Errors
+- Restarts
+
+Useful for debugging.
+
+---
+
+# 12. Resource Monitoring
+
+## View Pod CPU & Memory Usage
+
+```bash
+kubectl top pods
+```
+
+Requires Metrics Server.
+
+---
+
+## View Node CPU & Memory Usage
+
+```bash
+kubectl top nodes
+```
+
+---
+
+# 13. YAML Generation Commands
+
+## Generate Pod YAML
+
+```bash
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+```
+
+Generates a Pod YAML without creating it.
+
+---
+
+## Generate Deployment YAML
+
+```bash
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+```
+
+Useful for creating starter YAML files.
+
+---
+
+# 14. Context Commands
+
+## Current Context
+
+```bash
+kubectl config current-context
+```
+
+Shows the current Kubernetes cluster.
+
+---
+
+## View All Contexts
+
+```bash
+kubectl config get-contexts
+```
+
+---
+
+## Switch Context
+
+```bash
+kubectl config use-context minikube
+```
+
+Switches to another cluster.
+
+---
+
+# 15. Minikube Commands
+
+## Start Minikube
+
+```bash
+minikube start
+```
+
+Starts the local Kubernetes cluster.
+
+---
+
+## Stop Minikube
+
+```bash
+minikube stop
+```
+
+Stops the cluster.
+
+---
+
+## Delete Minikube Cluster
+
+```bash
+minikube delete
+```
+
+Deletes the local cluster.
+
+---
+
+## Get Minikube IP
+
+```bash
+minikube ip
+```
+
+Displays the Minikube node IP.
+
+---
+
+## Open Kubernetes Dashboard
+
+```bash
+minikube dashboard
+```
+
+Launches the Kubernetes Dashboard.
+
+---
+
+# Common Troubleshooting Workflow
+
+Whenever an application is not working, follow these steps:
+
+```bash
+kubectl get all
+```
+
+↓
+
+```bash
+kubectl get pods
+```
+
+↓
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+↓
+
+```bash
+kubectl logs <pod-name>
+```
+
+↓
+
+```bash
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
+↓
+
+```bash
+kubectl get events
+```
+
+This sequence helps identify most Kubernetes issues.
+
+---
+
+# Most Frequently Used Commands
+
+| Command | Purpose |
+|----------|---------|
+| `kubectl get nodes` | View cluster nodes |
+| `kubectl get pods` | List Pods |
+| `kubectl get deployments` | List Deployments |
+| `kubectl get svc` | List Services |
+| `kubectl get all` | View all resources |
+| `kubectl describe pod <pod>` | View Pod details |
+| `kubectl logs <pod>` | View application logs |
+| `kubectl exec -it <pod> -- /bin/bash` | Access Pod shell |
+| `kubectl apply -f file.yaml` | Create/Update resources |
+| `kubectl delete -f file.yaml` | Delete resources |
+| `kubectl rollout restart deployment <name>` | Restart Deployment |
+| `kubectl rollout undo deployment <name>` | Rollback Deployment |
+| `kubectl scale deployment <name> --replicas=N` | Scale Pods |
+| `kubectl get configmaps` | View ConfigMaps |
+| `kubectl get secrets` | View Secrets |
+| `kubectl get ingress` | View Ingress |
+| `kubectl get namespaces` | View Namespaces |
+| `kubectl top pods` | Monitor Pod usage |
+| `kubectl get events` | View cluster events |
+| `kubectl cluster-info` | Cluster information |
+
+---
+
+# Top 10 Commands Every Beginner Should Memorize
+
+```bash
+kubectl get nodes
+kubectl get pods
+kubectl get deployments
+kubectl get svc
+kubectl get all
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+kubectl exec -it <pod-name> -- /bin/bash
+kubectl apply -f file.yaml
+kubectl delete -f file.yaml
+```
+
+These commands are enough to perform most day-to-day Kubernetes tasks while learning and are heavily used in real-world DevOps environments.
+
+---
+
+# Quick Command Categories
+
+| Category | Commands |
+|-----------|----------|
+| Cluster | `cluster-info`, `version`, `get nodes` |
+| Pods | `get`, `describe`, `logs`, `exec`, `delete` |
+| Deployments | `get`, `describe`, `scale`, `restart`, `rollback` |
+| Services | `get svc`, `describe service` |
+| Namespaces | `get ns`, `create namespace`, `delete namespace` |
+| ConfigMaps | `get configmaps`, `describe configmap` |
+| Secrets | `get secrets`, `describe secret` |
+| Ingress | `get ingress`, `describe ingress` |
+| YAML | `apply`, `create`, `replace`, `delete` |
+| Monitoring | `top pods`, `top nodes`, `get events` |
+| Minikube | `start`, `stop`, `delete`, `dashboard` |
+
+---
+
+# One-Line Summary
+
+**The `kubectl` command-line tool is the primary interface for interacting with Kubernetes, allowing DevOps engineers to deploy, monitor, troubleshoot, scale, and manage every resource inside a Kubernetes cluster.**
