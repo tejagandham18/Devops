@@ -4482,3 +4482,758 @@ Ingress Controller is the application that watches those rules and routes traffi
 # One-Line Summary
 
 **Kubernetes Ingress provides a centralized and cost-effective way to expose multiple applications through a single external entry point by using an Ingress Controller to route HTTP/HTTPS traffic to the appropriate Services based on hostnames or URL paths.**
+
+
+# Kubernetes Zero to Hero - Day 7 Notes
+# Topic: Kubernetes ConfigMaps & Secrets
+
+## Overview
+
+In this session, I learned about **ConfigMaps** and **Secrets**, which are used to manage application configuration and sensitive data in Kubernetes.
+
+Instead of storing configuration inside the application or Docker image, Kubernetes allows us to store configuration separately using **ConfigMaps** and sensitive information using **Secrets**.
+
+This makes applications more flexible, secure, and easier to manage across multiple environments.
+
+---
+
+# Why Do We Need ConfigMaps and Secrets?
+
+Suppose we have a Java or Python application running inside a Docker container.
+
+The application needs the following information:
+
+- Database Host
+- Database Port
+- Database Name
+- Username
+- Password
+
+A beginner might hardcode these values inside the application.
+
+Example:
+
+```python
+DB_HOST = "dev-db.company.com"
+DB_PORT = "3306"
+DB_USER = "admin"
+DB_PASSWORD = "password123"
+```
+
+The application works perfectly.
+
+Now imagine we have three environments.
+
+```text
+Development
+
+↓
+
+dev-db.company.com
+
+------------------------
+
+Testing
+
+↓
+
+test-db.company.com
+
+------------------------
+
+Production
+
+↓
+
+prod-db.company.com
+```
+
+The application code is exactly the same.
+
+Only the database configuration changes.
+
+---
+
+# Problem Without ConfigMaps
+
+If configuration is stored inside the application:
+
+Whenever the database changes, we must:
+
+```text
+Modify Source Code
+
+↓
+
+Build Docker Image Again
+
+↓
+
+Push Image to Registry
+
+↓
+
+Pull Image
+
+↓
+
+Deploy Again
+```
+
+This process is time-consuming and inefficient.
+
+---
+
+# Kubernetes Solution
+
+Instead of storing configuration inside the application,
+
+Kubernetes stores configuration separately.
+
+```text
+Application
+
+↓
+
+Reads Configuration
+
+↓
+
+ConfigMap
+```
+
+Now the Docker image never changes.
+
+Only the ConfigMap changes.
+
+---
+
+# What is a ConfigMap?
+
+A ConfigMap is a Kubernetes resource used to store **non-sensitive configuration data**.
+
+Examples include:
+
+- Database Host
+- Database Port
+- Application Name
+- Log Level
+- Feature Flags
+- Environment Variables
+- Configuration Files
+
+Example:
+
+```text
+ConfigMap
+
+Database Host
+
+↓
+
+mysql.company.com
+
+---------------------
+
+Database Port
+
+↓
+
+3306
+
+---------------------
+
+Log Level
+
+↓
+
+INFO
+
+---------------------
+
+Application Name
+
+↓
+
+Shopping App
+```
+
+Notice that ConfigMaps do **not** store passwords or sensitive information.
+
+---
+
+# Advantages of ConfigMaps
+
+- Separates configuration from application code.
+- No need to rebuild Docker images when configuration changes.
+- Easier environment management.
+- Reusable across multiple Pods.
+- Better application portability.
+
+---
+
+# Real-Life Example
+
+Think of a television.
+
+The television is the application.
+
+The remote control changes the settings.
+
+You don't replace the TV every time you change the volume.
+
+Similarly,
+
+ConfigMaps allow us to change application settings without rebuilding the application.
+
+---
+
+# What is a Secret?
+
+Secrets are Kubernetes resources used to store **sensitive information**.
+
+Examples include:
+
+- Database Passwords
+- API Keys
+- OAuth Credentials
+- JWT Tokens
+- SSH Keys
+- TLS Certificates
+- AWS Access Keys
+
+Example:
+
+```text
+Secret
+
+Database Password
+
+↓
+
+********
+
+----------------------
+
+JWT Secret
+
+↓
+
+********
+
+----------------------
+
+API Key
+
+↓
+
+********
+```
+
+Unlike ConfigMaps, Secrets are specifically designed to protect confidential data.
+
+---
+
+# Why Not Store Passwords in ConfigMaps?
+
+Imagine storing passwords inside a ConfigMap.
+
+```text
+ConfigMap
+
+Database Host
+
+↓
+
+mysql.company.com
+
+---------------------
+
+Password
+
+↓
+
+admin123
+```
+
+Anyone with permission to read ConfigMaps can see the password.
+
+This creates a security risk.
+
+Instead:
+
+```text
+ConfigMap
+
+↓
+
+Database Host
+
+Database Port
+
+Application Name
+
+------------------------
+
+Secret
+
+↓
+
+Database Password
+
+JWT Secret
+
+API Keys
+```
+
+Configuration and credentials remain separated.
+
+---
+
+# ConfigMap vs Secret
+
+| ConfigMap | Secret |
+|------------|--------|
+| Stores non-sensitive data | Stores sensitive data |
+| Database Host | Database Password |
+| Database Port | API Keys |
+| Log Level | JWT Tokens |
+| Application Name | OAuth Credentials |
+| Feature Flags | TLS Certificates |
+| Easy to read | Protected using RBAC |
+
+---
+
+# Where Are ConfigMaps and Secrets Stored?
+
+Both ConfigMaps and Secrets are stored inside the Kubernetes cluster.
+
+```text
+Kubernetes Cluster
+
+│
+
+├── ConfigMap
+
+└── Secret
+```
+
+Pods access them whenever needed.
+
+---
+
+# How Does a Pod Access ConfigMaps and Secrets?
+
+There are two common methods.
+
+---
+
+# Method 1 - Environment Variables
+
+Kubernetes injects values directly into the container's environment.
+
+Example ConfigMap:
+
+```text
+DB_HOST
+
+↓
+
+mysql.company.com
+```
+
+Inside the Pod:
+
+```text
+Environment Variable
+
+↓
+
+DB_HOST
+
+↓
+
+mysql.company.com
+```
+
+Application:
+
+```python
+DB_HOST = os.getenv("DB_HOST")
+```
+
+The application reads the value without knowing where it came from.
+
+---
+
+# Method 2 - Volume Mounts
+
+Instead of environment variables,
+
+Kubernetes creates files inside the container.
+
+Example:
+
+```text
+Container
+
+↓
+
+/config
+
+↓
+
+db_host
+
+↓
+
+mysql.company.com
+```
+
+The application simply reads the file.
+
+Flow:
+
+```text
+ConfigMap
+
+↓
+
+Volume Mount
+
+↓
+
+Container
+
+↓
+
+Application
+```
+
+Secrets also support both methods.
+
+---
+
+# Accessing Secrets
+
+Environment Variable:
+
+```text
+Secret
+
+↓
+
+PASSWORD
+
+↓
+
+Application
+```
+
+Volume Mount:
+
+```text
+Secret
+
+↓
+
+Mounted File
+
+↓
+
+Application
+```
+
+---
+
+# RBAC (Role-Based Access Control)
+
+Secrets contain confidential information.
+
+Therefore, Kubernetes recommends protecting them using RBAC.
+
+Example:
+
+```text
+Developer
+
+↓
+
+ConfigMap ✔
+
+Secret ❌
+
+-------------------------
+
+Administrator
+
+↓
+
+ConfigMap ✔
+
+Secret ✔
+```
+
+Only authorized users should access Secrets.
+
+---
+
+# Principle of Least Privilege
+
+A fundamental security principle.
+
+Meaning:
+
+Give users **only the permissions they need**.
+
+Example:
+
+Frontend Developer
+
+Needs:
+
+- ConfigMaps ✔
+
+Does Not Need:
+
+- Database Password ❌
+
+Administrator
+
+Needs:
+
+- ConfigMaps ✔
+
+- Secrets ✔
+
+This reduces security risks.
+
+---
+
+# Are Kubernetes Secrets Encrypted?
+
+By default, Kubernetes stores Secrets as **Base64 encoded** values.
+
+Example:
+
+Original Password
+
+```text
+password123
+```
+
+Base64 Representation
+
+```text
+cGFzc3dvcmQxMjM=
+```
+
+**Important:**
+
+Base64 is **encoding**, not strong encryption.
+
+Anyone can decode it.
+
+For production environments, stronger secret management solutions are recommended.
+
+Examples:
+
+- HashiCorp Vault
+- AWS Secrets Manager
+- Azure Key Vault
+- Google Secret Manager
+- Sealed Secrets
+
+These provide:
+
+- Strong Encryption
+- Secret Rotation
+- Audit Logs
+- Fine-Grained Access Control
+
+---
+
+# Complete Workflow
+
+```text
+Deployment
+
+↓
+
+Pod
+
+┌────────────┴────────────┐
+
+▼                         ▼
+
+ConfigMap              Secret
+
+▼                         ▼
+
+Configuration        Credentials
+
+└────────────┬────────────┘
+
+↓
+
+Application
+```
+
+The application starts by reading both ConfigMaps and Secrets.
+
+---
+
+# Real-World Example
+
+Suppose we deploy an E-Commerce application.
+
+ConfigMap stores:
+
+- Application Name
+- Database Host
+- Database Port
+- Log Level
+- Environment
+
+Secret stores:
+
+- Database Password
+- JWT Secret
+- Stripe API Key
+- AWS Access Key
+
+The application reads both resources when it starts.
+
+---
+
+# Advantages of ConfigMaps
+
+- Easy Configuration Management
+- Environment Separation
+- No Docker Image Rebuild
+- Reusable Across Applications
+- Better Maintainability
+
+---
+
+# Advantages of Secrets
+
+- Secure Storage of Credentials
+- Better Security Practices
+- RBAC Protection
+- Separation of Sensitive Data
+- Production-Ready Secret Management
+
+---
+
+# Kubernetes Architecture
+
+```text
+                     Deployment
+                          │
+                          ▼
+                         Pod
+                   ┌──────┴──────┐
+                   ▼             ▼
+              ConfigMap       Secret
+                   │             │
+                   ▼             ▼
+            Configuration   Credentials
+                   │             │
+                   └──────┬──────┘
+                          ▼
+                     Application
+```
+
+---
+
+# Topics Learned
+
+After completing today's session, I learned:
+
+- Why ConfigMaps are needed
+- Why Secrets are needed
+- Problems with Hardcoded Configuration
+- ConfigMap Architecture
+- Secret Architecture
+- ConfigMap vs Secret
+- Environment Variables
+- Volume Mounts
+- RBAC
+- Principle of Least Privilege
+- Base64 Encoding
+- Enterprise Secret Management
+
+---
+
+# Interview Questions
+
+## What is a ConfigMap?
+
+A ConfigMap is a Kubernetes resource used to store non-sensitive configuration data separately from the application code, allowing configuration changes without rebuilding the Docker image.
+
+---
+
+## What is a Secret?
+
+A Secret is a Kubernetes resource used to securely store sensitive information such as passwords, API keys, JWT tokens, OAuth credentials, and certificates.
+
+---
+
+## Why do we need ConfigMaps?
+
+ConfigMaps separate application configuration from application code, making applications easier to configure and deploy across different environments.
+
+---
+
+## Why should passwords not be stored in ConfigMaps?
+
+ConfigMaps are intended for non-sensitive configuration. Passwords and credentials should be stored in Secrets to improve security and enable access control.
+
+---
+
+## How can Pods access ConfigMaps and Secrets?
+
+Pods can access ConfigMaps and Secrets in two ways:
+
+- Environment Variables
+- Volume Mounts
+
+---
+
+## What is RBAC?
+
+Role-Based Access Control (RBAC) is a Kubernetes security mechanism that controls which users or services can access resources such as Secrets.
+
+---
+
+## What is the Principle of Least Privilege?
+
+The Principle of Least Privilege means granting users or applications only the minimum permissions required to perform their tasks.
+
+---
+
+## Is Base64 Encoding the same as Encryption?
+
+No.
+
+Base64 is an encoding mechanism, not strong encryption. It only changes the representation of the data and can be easily decoded.
+
+---
+
+# Key Takeaways
+
+- ConfigMaps store non-sensitive configuration.
+- Secrets store sensitive credentials.
+- Configuration should never be hardcoded inside applications.
+- Docker images should remain unchanged across environments.
+- ConfigMaps and Secrets can be injected into Pods using Environment Variables or Volume Mounts.
+- RBAC protects access to sensitive information.
+- Base64 encoding is not strong encryption.
+- Enterprise applications use dedicated secret management tools like HashiCorp Vault or cloud secret managers.
+
+---
+
+# One-Line Summary
+
+**ConfigMaps and Secrets separate application configuration from application code, allowing Kubernetes applications to receive configuration dynamically while securely managing sensitive credentials without rebuilding Docker images, making deployments flexible, secure, and production-ready.**
