@@ -5943,3 +5943,767 @@ These commands are enough to perform most day-to-day Kubernetes tasks while lear
 # One-Line Summary
 
 **The `kubectl` command-line tool is the primary interface for interacting with Kubernetes, allowing DevOps engineers to deploy, monitor, troubleshoot, scale, and manage every resource inside a Kubernetes cluster.**
+
+# Kubernetes Zero to Hero - Day 8 Notes
+# Topic: Kubernetes RBAC (Role-Based Access Control)
+
+## Overview
+
+In this session, I learned about **Kubernetes RBAC (Role-Based Access Control)**, which is the security mechanism used to control **who can access Kubernetes resources and what actions they are allowed to perform**.
+
+RBAC helps secure the Kubernetes cluster by ensuring that users and applications only receive the permissions they actually need. This follows the **Principle of Least Privilege**, reducing the risk of accidental or unauthorized changes.
+
+---
+
+# Why Do We Need RBAC?
+
+Imagine a company with multiple employees working on the same Kubernetes cluster.
+
+Resources inside the cluster:
+
+```text
+Kubernetes Cluster
+
+│
+
+├── Pods
+
+├── Deployments
+
+├── Services
+
+├── ConfigMaps
+
+├── Secrets
+
+├── Ingress
+```
+
+Employees:
+
+- Developer
+- Tester
+- DevOps Engineer
+- Administrator
+
+If everyone had full access, anyone could accidentally delete important resources.
+
+Example:
+
+```bash
+kubectl delete pod --all
+```
+
+or
+
+```bash
+kubectl delete namespace production
+```
+
+This could bring down an entire production application.
+
+To prevent this, Kubernetes provides **RBAC**.
+
+---
+
+# What is RBAC?
+
+RBAC stands for:
+
+```text
+Role-Based Access Control
+```
+
+RBAC is the authorization system used by Kubernetes.
+
+It controls:
+
+- Who can access the cluster.
+- Which resources they can access.
+- What operations they can perform.
+- Which namespaces they are allowed to access.
+
+Think of RBAC as the **security guard** of the Kubernetes cluster.
+
+---
+
+# Real-Life Example
+
+Imagine an office building.
+
+There are different rooms:
+
+```text
+HR Room
+
+Finance Room
+
+Server Room
+
+CEO Cabin
+```
+
+Not every employee can enter every room.
+
+Example:
+
+Intern
+
+```text
+HR ✔
+
+Finance ❌
+
+Server Room ❌
+
+CEO Cabin ❌
+```
+
+Manager
+
+```text
+HR ✔
+
+Finance ✔
+
+Server Room ❌
+```
+
+Administrator
+
+```text
+Everything ✔
+```
+
+RBAC works exactly the same way inside Kubernetes.
+
+---
+
+# Core Components of RBAC
+
+RBAC consists of four major components.
+
+```text
+User / Service Account
+
+↓
+
+Role
+
+↓
+
+RoleBinding
+
+↓
+
+Access Granted
+```
+
+Let's understand each component.
+
+---
+
+# 1. Users
+
+A User represents a human accessing the Kubernetes cluster.
+
+Examples:
+
+- Developer
+- Tester
+- DevOps Engineer
+- Administrator
+
+Users usually authenticate using external systems such as cloud IAM, certificates, or identity providers.
+
+After authentication, RBAC decides what they are allowed to do.
+
+---
+
+# 2. Service Accounts
+
+Applications running inside Kubernetes also need permissions.
+
+Example:
+
+```text
+Pod
+
+↓
+
+Application
+
+↓
+
+Needs to Read Secret
+```
+
+Applications cannot log in like humans.
+
+Instead, Kubernetes creates a **Service Account**.
+
+Think of a Service Account as the identity of an application.
+
+Example:
+
+```text
+Developer
+
+↓
+
+User
+
+---------------------
+
+Nginx Pod
+
+↓
+
+Service Account
+```
+
+**Remember:**
+
+- Humans use **Users**
+- Applications use **Service Accounts**
+
+---
+
+# 3. Roles
+
+A Role defines **permissions**.
+
+It specifies **what actions are allowed** on Kubernetes resources.
+
+Example:
+
+```text
+Read Pods ✔
+
+Create Pods ✔
+
+Delete Pods ❌
+
+Delete Secrets ❌
+```
+
+A Role only defines permissions.
+
+It does **not** specify who receives those permissions.
+
+Think of a Role as a **job description**.
+
+---
+
+# Real-Life Example
+
+Library Rules:
+
+```text
+Can Read Books ✔
+
+Can Borrow Books ✔
+
+Cannot Delete Books ❌
+```
+
+These rules exist before assigning them to anyone.
+
+---
+
+# 4. RoleBindings
+
+A RoleBinding connects a **User** or **Service Account** to a **Role**.
+
+Without a RoleBinding:
+
+```text
+Developer
+
+↓
+
+No Permissions
+```
+
+With a RoleBinding:
+
+```text
+Developer
+
+↓
+
+Read Only Role
+
+↓
+
+Can Read Pods
+```
+
+RoleBindings assign permissions to users or applications.
+
+---
+
+# Role vs ClusterRole
+
+One of the most common Kubernetes interview questions.
+
+---
+
+## Role
+
+A Role is limited to a **single namespace**.
+
+Example:
+
+```text
+Namespace
+
+↓
+
+Development
+```
+
+Developer can:
+
+```text
+Read Pods ✔
+
+Create Pods ✔
+```
+
+Only inside:
+
+```text
+Development Namespace
+```
+
+Cannot access:
+
+```text
+Production Namespace
+```
+
+Example:
+
+```text
+Cluster
+
+│
+
+├── Development ✔
+
+└── Production ❌
+```
+
+---
+
+## ClusterRole
+
+A ClusterRole applies across the **entire Kubernetes cluster**.
+
+Example:
+
+```text
+Read All Pods
+
+Read All Nodes
+
+Read All Namespaces
+```
+
+Permissions apply everywhere.
+
+Example:
+
+```text
+Development ✔
+
+Testing ✔
+
+Production ✔
+```
+
+---
+
+# Easy Way to Remember
+
+Role
+
+```text
+One Room
+```
+
+ClusterRole
+
+```text
+Entire Building
+```
+
+---
+
+# RoleBinding vs ClusterRoleBinding
+
+## RoleBinding
+
+Assigns a Role inside **one namespace**.
+
+Example:
+
+```text
+Developer
+
+↓
+
+Development Namespace
+```
+
+Developer only has permissions inside Development.
+
+---
+
+## ClusterRoleBinding
+
+Assigns a ClusterRole across the **entire Kubernetes cluster**.
+
+Example:
+
+```text
+Administrator
+
+↓
+
+Entire Cluster
+```
+
+Administrator has access everywhere.
+
+---
+
+# RBAC Workflow
+
+Suppose a Developer wants to view Pods.
+
+Step 1
+
+```text
+Developer
+```
+
+↓
+
+Authentication
+
+↓
+
+Identity Verified
+
+---
+
+Step 2
+
+RBAC checks:
+
+```text
+Is there a RoleBinding?
+```
+
+↓
+
+Yes
+
+---
+
+Step 3
+
+RBAC checks:
+
+```text
+Which Role is Assigned?
+```
+
+↓
+
+Read Pods Role
+
+---
+
+Step 4
+
+Permission Granted
+
+```text
+Read Pods ✔
+```
+
+Developer can now view Pods.
+
+---
+
+# Real Company Example
+
+Suppose a company has three environments.
+
+```text
+Development
+
+Testing
+
+Production
+```
+
+Developer
+
+```text
+Development ✔
+
+Testing ✔
+
+Production ❌
+```
+
+Tester
+
+```text
+Testing ✔
+
+Development ❌
+
+Production ❌
+```
+
+DevOps Engineer
+
+```text
+Development ✔
+
+Testing ✔
+
+Production ✔
+```
+
+Administrator
+
+```text
+Everything ✔
+```
+
+RBAC makes this possible.
+
+---
+
+# Principle of Least Privilege
+
+RBAC follows the **Principle of Least Privilege**.
+
+Meaning:
+
+Give users only the permissions they actually need.
+
+Example:
+
+Frontend Developer
+
+Needs:
+
+```text
+Read Pods ✔
+
+View Logs ✔
+```
+
+Does Not Need:
+
+```text
+Delete Namespace ❌
+
+Delete Secrets ❌
+```
+
+Limiting permissions reduces security risks.
+
+---
+
+# RBAC and Secrets
+
+Suppose the Kubernetes cluster contains:
+
+ConfigMap
+
+```text
+Application Name
+```
+
+Secret
+
+```text
+Database Password
+```
+
+RBAC can be configured like this:
+
+Developer
+
+```text
+ConfigMap ✔
+
+Secret ❌
+```
+
+Administrator
+
+```text
+ConfigMap ✔
+
+Secret ✔
+```
+
+Sensitive information remains protected.
+
+---
+
+# Complete RBAC Architecture
+
+```text
+                    Kubernetes Cluster
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+      Developer        Tester         Application
+          │                │                │
+        User             User      Service Account
+          │                │                │
+          └────────────────┼────────────────┘
+                           ▼
+                     RoleBinding
+                           │
+                           ▼
+                          Role
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+     Read Pods      Create Pods        View Logs
+```
+
+---
+
+# Role vs ClusterRole
+
+| Role | ClusterRole |
+|------|-------------|
+| Namespace-specific | Cluster-wide |
+| Applies to one namespace | Applies to the entire cluster |
+| Limited scope | Global scope |
+| Example: Development namespace | Example: Read all nodes |
+
+---
+
+# RoleBinding vs ClusterRoleBinding
+
+| RoleBinding | ClusterRoleBinding |
+|-------------|--------------------|
+| Assigns a Role | Assigns a ClusterRole |
+| Namespace-specific | Cluster-wide |
+| Limited access | Global access |
+
+---
+
+# Users vs Service Accounts
+
+| Users | Service Accounts |
+|--------|------------------|
+| Human users | Applications and Pods |
+| Developers | Nginx Pod |
+| Testers | Backend Application |
+| Administrators | Kubernetes Jobs |
+
+---
+
+# Topics Learned
+
+After today's session, I learned:
+
+- What RBAC is
+- Why RBAC is important
+- Users
+- Service Accounts
+- Roles
+- ClusterRoles
+- RoleBindings
+- ClusterRoleBindings
+- Principle of Least Privilege
+- RBAC Workflow
+- RBAC Security
+- Protecting Secrets using RBAC
+
+---
+
+# Interview Questions
+
+## What is RBAC?
+
+RBAC (Role-Based Access Control) is Kubernetes' authorization mechanism used to control who or what can perform actions on Kubernetes resources.
+
+---
+
+## Why is RBAC needed?
+
+RBAC prevents unauthorized access and ensures users and applications only have the permissions required for their tasks.
+
+---
+
+## What are the core components of RBAC?
+
+- Users
+- Service Accounts
+- Roles
+- ClusterRoles
+- RoleBindings
+- ClusterRoleBindings
+
+---
+
+## What is the difference between a User and a Service Account?
+
+A User represents a human accessing the cluster, while a Service Account represents an application or Pod running inside Kubernetes.
+
+---
+
+## What is the difference between a Role and a ClusterRole?
+
+A Role grants permissions within a single namespace, whereas a ClusterRole grants permissions across the entire Kubernetes cluster.
+
+---
+
+## What is the difference between a RoleBinding and a ClusterRoleBinding?
+
+A RoleBinding assigns a Role within one namespace, while a ClusterRoleBinding assigns a ClusterRole across the entire cluster.
+
+---
+
+## What is the Principle of Least Privilege?
+
+The Principle of Least Privilege means giving users and applications only the minimum permissions required to perform their tasks.
+
+---
+
+## How does RBAC protect Secrets?
+
+RBAC restricts access so that only authorized users or service accounts can read or modify Kubernetes Secrets.
+
+---
+
+# Key Takeaways
+
+- RBAC is Kubernetes' built-in authorization system.
+- Users represent humans, while Service Accounts represent applications.
+- Roles define permissions.
+- RoleBindings assign those permissions.
+- ClusterRoles and ClusterRoleBindings work across the entire cluster.
+- RBAC follows the Principle of Least Privilege.
+- RBAC protects critical resources such as Secrets, ConfigMaps, Pods, and Deployments from unauthorized access.
+
+---
+
+# One-Line Summary
+
+**RBAC (Role-Based Access Control) is Kubernetes' security framework that controls who or what can access cluster resources by assigning permissions through Roles and RoleBindings, ensuring users and applications receive only the minimum permissions they require.**
