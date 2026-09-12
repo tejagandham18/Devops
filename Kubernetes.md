@@ -6707,3 +6707,578 @@ RBAC restricts access so that only authorized users or service accounts can read
 # One-Line Summary
 
 **RBAC (Role-Based Access Control) is Kubernetes' security framework that controls who or what can access cluster resources by assigning permissions through Roles and RoleBindings, ensuring users and applications receive only the minimum permissions they require.**
+
+
+# Kubernetes Storage (Persistent Volume & Persistent Volume Claim)
+
+## Objective
+
+The objective of this practical is to understand how Kubernetes stores application data permanently, even if a Pod crashes or is recreated.
+
+---
+
+# Why Do We Need Storage?
+
+By default, every Kubernetes Pod has **Ephemeral Storage**.
+
+Ephemeral means **temporary**.
+
+Example:
+
+```
+Pod
+ │
+ ├── message.txt
+ └── image.png
+```
+
+If the Pod is deleted:
+
+```
+Pod ❌
+
+↓
+
+New Pod
+
+↓
+
+Files Lost ❌
+```
+
+Therefore, Kubernetes introduces **Persistent Storage**.
+
+---
+
+# Persistent Volume (PV)
+
+A **Persistent Volume (PV)** is the **actual storage** available in the Kubernetes cluster.
+
+Think of it as a **Storage Room**.
+
+Example:
+
+```
+Persistent Volume
+
+Capacity : 1Gi
+
+Location : /mnt/data
+```
+
+A PV can use different storage backends:
+
+- Local Disk (hostPath)
+- AWS EBS
+- Azure Disk
+- Google Persistent Disk
+- NFS
+- SAN Storage
+
+---
+
+# Persistent Volume Claim (PVC)
+
+A **Persistent Volume Claim (PVC)** is a **request for storage**.
+
+Think of it as a **Storage Request Form**.
+
+Example:
+
+```
+I need:
+
+Storage : 1Gi
+```
+
+The Pod never directly connects to the Persistent Volume.
+
+Instead:
+
+```
+Pod
+
+↓
+
+PVC
+
+↓
+
+PV
+```
+
+Kubernetes automatically binds the PVC to a suitable PV.
+
+---
+
+# Difference Between PV and PVC
+
+| Persistent Volume (PV) | Persistent Volume Claim (PVC) |
+|-------------------------|-------------------------------|
+| Actual Storage | Request for Storage |
+| Created by Administrator | Created by Application |
+| Contains Storage Capacity | Requests Storage Capacity |
+| Stores Data | Provides access to the storage |
+
+---
+
+# Static Provisioning
+
+Administrator creates the PV manually.
+
+```
+Administrator
+
+↓
+
+Persistent Volume
+
+↓
+
+PVC
+
+↓
+
+Pod
+```
+
+---
+
+# Dynamic Provisioning
+
+Developer creates only the PVC.
+
+Kubernetes automatically creates the PV using a StorageClass.
+
+```
+PVC
+
+↓
+
+StorageClass
+
+↓
+
+PV Created Automatically
+
+↓
+
+Pod
+```
+
+---
+
+# Architecture
+
+```
+                Deployment
+                     │
+                     ▼
+                   Pod
+                     │
+                     ▼
+            Persistent Volume Claim
+                     │
+                     ▼
+            Persistent Volume
+                     │
+                     ▼
+                 /mnt/data
+```
+
+---
+
+# Step 1 : Create Persistent Volume
+
+Create:
+
+```
+pv.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+
+metadata:
+  name: nginx-pv
+
+spec:
+  capacity:
+    storage: 1Gi
+
+  accessModes:
+    - ReadWriteOnce
+
+  persistentVolumeReclaimPolicy: Retain
+
+  hostPath:
+    path: /mnt/data
+```
+
+---
+
+## Apply PV
+
+```bash
+kubectl apply -f pv.yaml
+```
+
+Verify:
+
+```bash
+kubectl get pv
+```
+
+Expected Output
+
+```
+NAME       CAPACITY   STATUS
+nginx-pv   1Gi        Available
+```
+
+---
+
+# Step 2 : Create Persistent Volume Claim
+
+Create:
+
+```
+pvc.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: nginx-pvc
+  namespace: teja-project
+
+spec:
+  storageClassName: ""
+
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+---
+
+## Apply PVC
+
+```bash
+kubectl apply -f pvc.yaml
+```
+
+Verify:
+
+```bash
+kubectl get pvc -n teja-project
+```
+
+Expected Output
+
+```
+NAME        STATUS   VOLUME
+nginx-pvc   Bound    nginx-pv
+```
+
+Also verify
+
+```bash
+kubectl get pv
+```
+
+```
+NAME       STATUS
+nginx-pv   Bound
+```
+
+---
+
+# Connecting PVC to Deployment
+
+Add the following section inside the container.
+
+```yaml
+volumeMounts:
+  - name: nginx-storage
+    mountPath: /usr/share/nginx/html/data
+```
+
+Add the following section under **spec**.
+
+```yaml
+volumes:
+  - name: nginx-storage
+    persistentVolumeClaim:
+      claimName: nginx-pvc
+```
+
+Final Flow
+
+```
+Deployment
+
+↓
+
+Pod
+
+↓
+
+Volume Mount
+
+↓
+
+PVC
+
+↓
+
+PV
+
+↓
+
+/mnt/data
+```
+
+---
+
+# Apply Deployment
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Check rollout
+
+```bash
+kubectl rollout status deployment/nginx-deployment -n teja-project
+```
+
+---
+
+# Verify Storage
+
+Enter the Pod
+
+```bash
+kubectl get pods -n teja-project
+```
+
+```bash
+kubectl exec -it <pod-name> -n teja-project -- /bin/sh
+```
+
+Go to mounted directory
+
+```bash
+cd /usr/share/nginx/html/data
+```
+
+Create a file
+
+```bash
+echo "Hello Teja" > message.txt
+```
+
+Verify
+
+```bash
+cat message.txt
+```
+
+Output
+
+```
+Hello Teja
+```
+
+Exit
+
+```bash
+exit
+```
+
+---
+
+# Delete the Pod
+
+```bash
+kubectl delete pod <pod-name> -n teja-project
+```
+
+Watch new Pod creation
+
+```bash
+kubectl get pods -n teja-project -w
+```
+
+---
+
+# Verify Persistence
+
+Enter the newly created Pod
+
+```bash
+kubectl exec -it <new-pod-name> -n teja-project -- /bin/sh
+```
+
+Go to mounted directory
+
+```bash
+cd /usr/share/nginx/html/data
+```
+
+Verify
+
+```bash
+cat message.txt
+```
+
+Output
+
+```
+Hello Teja
+```
+
+The file still exists because it is stored in the **Persistent Volume**, not inside the Pod.
+
+---
+
+# Key Learning
+
+✅ Pods are temporary.
+
+✅ Deployment recreates Pods.
+
+✅ Pod storage is ephemeral.
+
+✅ Persistent Volume stores application data permanently.
+
+✅ Persistent Volume Claim requests storage.
+
+✅ Kubernetes binds the PVC with the PV.
+
+✅ Deployment mounts the PVC into the Pod.
+
+✅ Even if the Pod crashes, the data remains available.
+
+---
+
+# Important kubectl Commands
+
+Create PV
+
+```bash
+kubectl apply -f pv.yaml
+```
+
+Create PVC
+
+```bash
+kubectl apply -f pvc.yaml
+```
+
+Check PV
+
+```bash
+kubectl get pv
+```
+
+Check PVC
+
+```bash
+kubectl get pvc -n teja-project
+```
+
+Describe PV
+
+```bash
+kubectl describe pv nginx-pv
+```
+
+Describe PVC
+
+```bash
+kubectl describe pvc nginx-pvc -n teja-project
+```
+
+Apply Deployment
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Check Rollout
+
+```bash
+kubectl rollout status deployment/nginx-deployment -n teja-project
+```
+
+Get Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Enter Pod
+
+```bash
+kubectl exec -it <pod-name> -n teja-project -- /bin/sh
+```
+
+Delete Pod
+
+```bash
+kubectl delete pod <pod-name> -n teja-project
+```
+
+Watch Pods
+
+```bash
+kubectl get pods -n teja-project -w
+```
+
+---
+
+# Interview Questions
+
+### What is Ephemeral Storage?
+
+Temporary storage that is lost when a Pod is deleted.
+
+### What is a Persistent Volume?
+
+A Persistent Volume (PV) is the actual storage resource available in the Kubernetes cluster.
+
+### What is a Persistent Volume Claim?
+
+A Persistent Volume Claim (PVC) is a request for storage made by a Pod.
+
+### Who binds the PV and PVC?
+
+Kubernetes.
+
+### Does a Pod directly connect to a PV?
+
+No.
+
+The Pod connects to the PVC, and Kubernetes binds the PVC to the PV.
+
+### Why do databases use Persistent Volumes?
+
+Because database data must survive Pod crashes and restarts.
+
+### Difference between Static and Dynamic Provisioning?
+
+Static Provisioning:
+Administrator creates the PV manually.
+
+Dynamic Provisioning:
+Kubernetes automatically creates the PV using a StorageClass when a PVC is created.
+
+---
