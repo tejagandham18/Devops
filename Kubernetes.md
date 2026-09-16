@@ -7282,3 +7282,703 @@ Dynamic Provisioning:
 Kubernetes automatically creates the PV using a StorageClass when a PVC is created.
 
 ---
+
+
+# Kubernetes StatefulSets
+
+## Objective
+
+The objective of this practical is to understand how Kubernetes manages **stateful applications** such as MongoDB, MySQL, PostgreSQL, Kafka, and Cassandra.
+
+Unlike Deployments, StatefulSets provide:
+
+- Stable Pod Names
+- Stable Network Identity
+- Stable Persistent Storage
+- Ordered Deployment
+- Ordered Termination
+
+---
+
+# What is a Stateful Application?
+
+A **Stateful Application** is an application that stores data and needs to remember its identity.
+
+Examples:
+
+- MongoDB
+- MySQL
+- PostgreSQL
+- Cassandra
+- Kafka
+- Elasticsearch
+
+These applications require:
+
+- Persistent Storage
+- Stable Hostnames
+- Stable Network Identity
+
+---
+
+# Why Can't We Use a Deployment?
+
+A Deployment creates Pods with random names.
+
+Example:
+
+```
+mongodb-deployment-5c9d4f7d8b-x4abc
+```
+
+If the Pod crashes:
+
+```
+mongodb-deployment-5c9d4f7d8b-x4abc
+
+↓
+
+Deleted
+
+↓
+
+mongodb-deployment-5c9d4f7d8b-k9xyz
+```
+
+The Pod name changes.
+
+For web applications like Nginx, this is perfectly fine.
+
+For databases, this is a problem because they require stable identities.
+
+---
+
+# Kubernetes Solution
+
+Kubernetes provides **StatefulSets**.
+
+Instead of random Pod names, StatefulSets create predictable Pod names.
+
+Example:
+
+```
+mongodb-0
+
+mongodb-1
+
+mongodb-2
+```
+
+If `mongodb-1` crashes:
+
+```
+mongodb-1
+
+↓
+
+Deleted
+
+↓
+
+mongodb-1
+```
+
+The Pod keeps the same identity.
+
+---
+
+# StatefulSet Features
+
+- Stable Pod Names
+- Stable Network Identity
+- Dedicated Storage Per Pod
+- Ordered Pod Creation
+- Ordered Pod Deletion
+- Rolling Updates
+
+---
+
+# Headless Service
+
+StatefulSets require a **Headless Service**.
+
+Unlike a normal Service, a Headless Service does **not** perform load balancing.
+
+Instead, every Pod gets its own DNS name.
+
+Example:
+
+```
+mongodb-0.mongodb
+
+mongodb-1.mongodb
+
+mongodb-2.mongodb
+```
+
+This allows database Pods to communicate directly with each other.
+
+---
+
+# Headless Service YAML
+
+File:
+
+```
+headless-service.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: mongodb
+  namespace: teja-project
+
+spec:
+  clusterIP: None
+
+  selector:
+    app: mongodb
+
+  ports:
+    - port: 27017
+      targetPort: 27017
+```
+
+---
+
+## Apply Headless Service
+
+```bash
+kubectl apply -f headless-service.yaml
+```
+
+Verify
+
+```bash
+kubectl get svc -n teja-project
+```
+
+Expected
+
+```
+NAME      TYPE        CLUSTER-IP   PORT
+mongodb   ClusterIP   None         27017/TCP
+```
+
+Notice:
+
+```
+ClusterIP = None
+```
+
+This confirms it is a Headless Service.
+
+---
+
+# StatefulSet Architecture
+
+```
+                StatefulSet
+                     │
+          Headless Service
+                     │
+      ┌──────────────┼──────────────┐
+      ▼              ▼              ▼
+  mongodb-0      mongodb-1      mongodb-2
+      │              │              │
+      ▼              ▼              ▼
+    PVC-0          PVC-1          PVC-2
+      │              │              │
+      ▼              ▼              ▼
+    PV-0           PV-1           PV-2
+```
+
+---
+
+# StatefulSet YAML
+
+File:
+
+```
+statefulset.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: mongodb
+  namespace: teja-project
+
+spec:
+  serviceName: mongodb
+
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mongodb
+
+  template:
+    metadata:
+      labels:
+        app: mongodb
+
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+
+          ports:
+            - containerPort: 27017
+
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
+
+  volumeClaimTemplates:
+    - metadata:
+        name: mongodb-storage
+
+      spec:
+        accessModes:
+          - ReadWriteOnce
+
+        resources:
+          requests:
+            storage: 1Gi
+```
+
+---
+
+# Explanation
+
+## serviceName
+
+```yaml
+serviceName: mongodb
+```
+
+Links the StatefulSet with the Headless Service.
+
+---
+
+## replicas
+
+```yaml
+replicas: 1
+```
+
+Creates one MongoDB Pod.
+
+Later we changed it to:
+
+```yaml
+replicas: 3
+```
+
+Result:
+
+```
+mongodb-0
+
+mongodb-1
+
+mongodb-2
+```
+
+---
+
+## volumeMounts
+
+```yaml
+volumeMounts:
+  - name: mongodb-storage
+    mountPath: /data/db
+```
+
+MongoDB stores all database files inside:
+
+```
+/data/db
+```
+
+This mount ensures the data is stored in the Persistent Volume.
+
+---
+
+## volumeClaimTemplates
+
+This is the biggest advantage of StatefulSets.
+
+Instead of manually creating:
+
+```
+pvc1.yaml
+
+pvc2.yaml
+
+pvc3.yaml
+```
+
+Kubernetes automatically creates one PVC for every Pod.
+
+Example:
+
+```
+mongodb-0
+
+↓
+
+mongodb-storage-mongodb-0
+
+──────────────────
+
+mongodb-1
+
+↓
+
+mongodb-storage-mongodb-1
+
+──────────────────
+
+mongodb-2
+
+↓
+
+mongodb-storage-mongodb-2
+```
+
+---
+
+# Practical Performed
+
+## Apply StatefulSet
+
+```bash
+kubectl apply -f statefulset.yaml
+```
+
+Check StatefulSet
+
+```bash
+kubectl get statefulset -n teja-project
+```
+
+Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Check PVC
+
+```bash
+kubectl get pvc -n teja-project
+```
+
+Output
+
+```
+mongodb-storage-mongodb-0
+```
+
+Notice:
+
+The PVC was created automatically.
+
+---
+
+# Scaling StatefulSet
+
+Change
+
+```yaml
+replicas: 1
+```
+
+to
+
+```yaml
+replicas: 3
+```
+
+Apply
+
+```bash
+kubectl apply -f statefulset.yaml
+```
+
+Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Output
+
+```
+mongodb-0
+
+mongodb-1
+
+mongodb-2
+```
+
+Check PVC
+
+```bash
+kubectl get pvc -n teja-project
+```
+
+Output
+
+```
+mongodb-storage-mongodb-0
+
+mongodb-storage-mongodb-1
+
+mongodb-storage-mongodb-2
+```
+
+Notice:
+
+Kubernetes automatically created three PVCs.
+
+---
+
+# Pod Deletion Practical
+
+Delete one Pod
+
+```bash
+kubectl delete pod mongodb-1 -n teja-project
+```
+
+Watch Pods
+
+```bash
+kubectl get pods -n teja-project -w
+```
+
+Output
+
+```
+mongodb-1
+
+↓
+
+Terminating
+
+↓
+
+Creating
+
+↓
+
+Running
+```
+
+Notice:
+
+The recreated Pod is still:
+
+```
+mongodb-1
+```
+
+The Pod identity never changes.
+
+---
+
+# Ordered Pod Creation
+
+Pods are created in sequence.
+
+```
+mongodb-0
+
+↓
+
+mongodb-1
+
+↓
+
+mongodb-2
+```
+
+---
+
+# Ordered Pod Deletion
+
+Pods are deleted in reverse order.
+
+```
+mongodb-2
+
+↓
+
+mongodb-1
+
+↓
+
+mongodb-0
+```
+
+---
+
+# Rolling Updates
+
+When the container image changes:
+
+```yaml
+image: mongo:latest
+```
+
+to
+
+```yaml
+image: mongo:8.0
+```
+
+StatefulSet updates Pods one at a time.
+
+```
+mongodb-0
+
+↓
+
+mongodb-1
+
+↓
+
+mongodb-2
+```
+
+This prevents downtime.
+
+---
+
+# Deployment vs StatefulSet
+
+| Deployment | StatefulSet |
+|------------|-------------|
+| Stateless Applications | Stateful Applications |
+| Random Pod Names | Stable Pod Names |
+| Pod Identity Changes | Pod Identity Never Changes |
+| Shared/Optional Storage | Dedicated Storage Per Pod |
+| Manual PVC Creation | Automatic PVC Creation |
+| Headless Service Not Required | Headless Service Required |
+| Suitable for Nginx, React, APIs | Suitable for MongoDB, MySQL, PostgreSQL |
+
+---
+
+# Important Commands
+
+Apply Headless Service
+
+```bash
+kubectl apply -f headless-service.yaml
+```
+
+Apply StatefulSet
+
+```bash
+kubectl apply -f statefulset.yaml
+```
+
+Check StatefulSets
+
+```bash
+kubectl get statefulset -n teja-project
+```
+
+Describe StatefulSet
+
+```bash
+kubectl describe statefulset mongodb -n teja-project
+```
+
+Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Watch Pods
+
+```bash
+kubectl get pods -n teja-project -w
+```
+
+Check PVC
+
+```bash
+kubectl get pvc -n teja-project
+```
+
+Delete Pod
+
+```bash
+kubectl delete pod mongodb-1 -n teja-project
+```
+
+Scale StatefulSet
+
+```bash
+kubectl scale statefulset mongodb --replicas=3 -n teja-project
+```
+
+---
+
+# Interview Questions
+
+### What is a StatefulSet?
+
+A StatefulSet is a Kubernetes workload resource used to manage stateful applications that require stable identities, stable storage, and predictable Pod names.
+
+---
+
+### Why not use Deployment for MongoDB?
+
+Deployments create Pods with random names. Databases require stable identities and dedicated storage, which StatefulSets provide.
+
+---
+
+### Why is a Headless Service required?
+
+A Headless Service gives each Pod a unique DNS name instead of load balancing requests, allowing Pods to communicate directly.
+
+---
+
+### What is volumeClaimTemplates?
+
+A template that automatically creates one PersistentVolumeClaim for each Pod in the StatefulSet.
+
+---
+
+### What happens if mongodb-1 crashes?
+
+The StatefulSet recreates the Pod with the same name (`mongodb-1`) and reattaches its existing PersistentVolumeClaim.
+
+---
+
+### Why does each Pod need its own PVC?
+
+Each database instance stores its own data. Separate PVCs ensure each Pod has dedicated persistent storage and avoids storage conflicts.
+
+---
+
+# Key Learnings
+
+- StatefulSets are designed for stateful applications.
+- Every Pod has a stable identity.
+- Every Pod gets its own PersistentVolumeClaim.
+- Headless Services provide stable DNS names.
+- `volumeClaimTemplates` automatically create storage for each Pod.
+- Pods are created in order and deleted in reverse order.
+- StatefulSets are commonly used for databases such as MongoDB, MySQL, PostgreSQL, Kafka, and Cassandra.
