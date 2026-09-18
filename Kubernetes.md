@@ -7982,3 +7982,588 @@ Each database instance stores its own data. Separate PVCs ensure each Pod has de
 - `volumeClaimTemplates` automatically create storage for each Pod.
 - Pods are created in order and deleted in reverse order.
 - StatefulSets are commonly used for databases such as MongoDB, MySQL, PostgreSQL, Kafka, and Cassandra.
+
+
+# Kubernetes DaemonSets
+
+## Objective
+
+The objective of this practical is to understand how Kubernetes ensures that **one Pod runs on every Node** in the cluster.
+
+DaemonSets are mainly used for **node-level services** such as:
+
+- Log Collection
+- Monitoring
+- Networking
+- Security
+
+Unlike Deployments and StatefulSets, a DaemonSet does not use replicas. Instead, Kubernetes automatically creates one Pod for every Node.
+
+---
+
+# What is a Node?
+
+A **Node** is a physical machine or virtual machine where Kubernetes runs Pods.
+
+Example:
+
+```
+Server 1
+Server 2
+Server 3
+```
+
+In Kubernetes, these servers are called:
+
+```
+Node-1
+Node-2
+Node-3
+```
+
+Every Pod in Kubernetes runs inside a Node.
+
+---
+
+# What is a DaemonSet?
+
+A **DaemonSet** is a Kubernetes workload resource that ensures **one Pod runs on every Node** in the cluster.
+
+If there is:
+
+```
+1 Node
+```
+
+DaemonSet creates:
+
+```
+1 Pod
+```
+
+If there are:
+
+```
+5 Nodes
+```
+
+DaemonSet creates:
+
+```
+5 Pods
+```
+
+If tomorrow a new Node joins the cluster, Kubernetes automatically creates another DaemonSet Pod on that Node.
+
+---
+
+# Why Do We Need DaemonSets?
+
+Imagine a company has three servers.
+
+```
+Node-1
+
+Node-2
+
+Node-3
+```
+
+The company wants every server to:
+
+- Send Logs
+- Monitor CPU
+- Monitor Memory
+- Monitor Disk
+- Detect Security Threats
+
+Instead of manually deploying monitoring software on every server, Kubernetes provides DaemonSets.
+
+Result:
+
+```
+Node-1
+   │
+   ▼
+Monitoring Pod
+
+────────────────────
+
+Node-2
+   │
+   ▼
+Monitoring Pod
+
+────────────────────
+
+Node-3
+   │
+   ▼
+Monitoring Pod
+```
+
+One Pod is automatically created on every Node.
+
+---
+
+# DaemonSet Architecture
+
+```
+                Kubernetes Cluster
+
+       +-----------+ +-----------+ +-----------+
+       | Node-1    | | Node-2    | | Node-3    |
+       +-----------+ +-----------+ +-----------+
+             │             │             │
+             ▼             ▼             ▼
+      Nginx Pod     Nginx Pod     Nginx Pod
+```
+
+One Pod runs on every Node.
+
+---
+
+# DaemonSet YAML
+
+File:
+
+```
+daemonset.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+
+metadata:
+  name: nginx-daemonset
+  namespace: teja-project
+
+spec:
+  selector:
+    matchLabels:
+      app: nginx-daemon
+
+  template:
+    metadata:
+      labels:
+        app: nginx-daemon
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+
+          ports:
+            - containerPort: 80
+```
+
+---
+
+# Explanation
+
+## apiVersion
+
+```yaml
+apiVersion: apps/v1
+```
+
+Specifies the Kubernetes API version.
+
+---
+
+## kind
+
+```yaml
+kind: DaemonSet
+```
+
+Tells Kubernetes to create a DaemonSet.
+
+---
+
+## metadata
+
+```yaml
+metadata:
+  name: nginx-daemonset
+```
+
+Defines the DaemonSet name.
+
+---
+
+## selector
+
+```yaml
+selector:
+  matchLabels:
+    app: nginx-daemon
+```
+
+The DaemonSet manages Pods that have the label:
+
+```
+app: nginx-daemon
+```
+
+---
+
+## template
+
+The template defines the Pod configuration.
+
+```yaml
+template:
+```
+
+Every Pod created by the DaemonSet follows this template.
+
+---
+
+## containers
+
+```yaml
+containers:
+```
+
+Defines the container that will run inside every Pod.
+
+---
+
+## image
+
+```yaml
+image: nginx:latest
+```
+
+The container image used for every DaemonSet Pod.
+
+---
+
+## ports
+
+```yaml
+containerPort: 80
+```
+
+Nginx listens on Port 80.
+
+---
+
+# Why Doesn't DaemonSet Use Replicas?
+
+Deployments require:
+
+```yaml
+replicas: 3
+```
+
+because we specify how many Pods we need.
+
+DaemonSets do **not** use replicas.
+
+Instead, Kubernetes automatically checks:
+
+```
+How many Nodes are available?
+```
+
+If there are:
+
+```
+4 Nodes
+```
+
+DaemonSet automatically creates:
+
+```
+4 Pods
+```
+
+One Pod on each Node.
+
+---
+
+# Practical Performed
+
+## Create DaemonSet
+
+```bash
+kubectl apply -f daemonset.yaml
+```
+
+---
+
+## Verify DaemonSet
+
+```bash
+kubectl get daemonsets -n teja-project
+```
+
+Example Output
+
+```
+NAME              DESIRED   CURRENT   READY
+nginx-daemonset   1         1         1
+```
+
+---
+
+## Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Example
+
+```
+nginx-daemonset-7xd2c
+```
+
+---
+
+## Check Nodes
+
+```bash
+kubectl get nodes
+```
+
+Example
+
+```
+NAME
+minikube
+```
+
+Since the cluster has one Node, Kubernetes created one DaemonSet Pod.
+
+---
+
+# What Happens When a New Node is Added?
+
+Suppose initially:
+
+```
+Node-1
+
+Node-2
+
+Node-3
+```
+
+DaemonSet creates:
+
+```
+Node-1 → Monitoring Pod
+
+Node-2 → Monitoring Pod
+
+Node-3 → Monitoring Pod
+```
+
+Now a new Node joins:
+
+```
+Node-4
+```
+
+DaemonSet automatically creates:
+
+```
+Node-4
+
+↓
+
+Monitoring Pod
+```
+
+No manual deployment is required.
+
+---
+
+# What Happens if a Node is Removed?
+
+Suppose:
+
+```
+Node-2
+```
+
+is removed from the cluster.
+
+The DaemonSet Pod running on Node-2 is automatically removed because the Node no longer exists.
+
+---
+
+# Rolling Updates
+
+If the image changes:
+
+```yaml
+image: nginx:latest
+```
+
+to
+
+```yaml
+image: nginx:1.28
+```
+
+Run:
+
+```bash
+kubectl apply -f daemonset.yaml
+```
+
+Kubernetes performs a Rolling Update and updates the DaemonSet Pods one Node at a time.
+
+---
+
+# Real-World Use Cases
+
+## Log Collection
+
+- Fluentd
+- Filebeat
+
+Every Node collects logs.
+
+---
+
+## Monitoring
+
+- Prometheus Node Exporter
+
+Every Node reports:
+
+- CPU
+- Memory
+- Disk
+- Network
+
+---
+
+## Networking
+
+- Calico
+- Cilium
+
+Every Node requires networking components.
+
+---
+
+## Security
+
+- Falco
+
+Every Node monitors suspicious activity.
+
+---
+
+# Deployment vs StatefulSet vs DaemonSet
+
+| Feature | Deployment | StatefulSet | DaemonSet |
+|----------|------------|-------------|-----------|
+| Purpose | Stateless Applications | Stateful Applications | Node-Level Services |
+| Pod Names | Random | Stable | Random |
+| Storage | Optional | Dedicated Storage Per Pod | Usually Not Required |
+| Headless Service | No | Yes | No |
+| Replicas | Required | Required | Not Required |
+| Pod Placement | Anywhere | Anywhere | One Pod Per Node |
+| Examples | Nginx, React, APIs | MongoDB, MySQL | Fluentd, Node Exporter |
+
+---
+
+# Important Commands
+
+Apply DaemonSet
+
+```bash
+kubectl apply -f daemonset.yaml
+```
+
+Check DaemonSets
+
+```bash
+kubectl get daemonsets -n teja-project
+```
+
+Describe DaemonSet
+
+```bash
+kubectl describe daemonset nginx-daemonset -n teja-project
+```
+
+Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+Check Nodes
+
+```bash
+kubectl get nodes
+```
+
+Delete DaemonSet
+
+```bash
+kubectl delete daemonset nginx-daemonset -n teja-project
+```
+
+---
+
+# Interview Questions
+
+## What is a DaemonSet?
+
+A DaemonSet is a Kubernetes workload resource that ensures one Pod runs on every Node in the cluster.
+
+---
+
+## Why do we use DaemonSets?
+
+DaemonSets are used for node-level services such as logging, monitoring, networking, and security.
+
+---
+
+## Why doesn't DaemonSet require replicas?
+
+Because Kubernetes automatically creates one Pod for every Node in the cluster.
+
+---
+
+## What happens when a new Node joins?
+
+Kubernetes automatically creates a DaemonSet Pod on the new Node.
+
+---
+
+## What happens when a Node is removed?
+
+The DaemonSet Pod running on that Node is automatically removed.
+
+---
+
+## Name some real-world DaemonSet applications.
+
+- Fluentd
+- Filebeat
+- Prometheus Node Exporter
+- Falco
+- Calico
+- Cilium
+
+---
+
+# Key Learnings
+
+- A Node is the machine where Pods run.
+- DaemonSets ensure one Pod runs on every Node.
+- DaemonSets do not require a replicas field.
+- They automatically adjust when Nodes are added or removed.
+- They are commonly used for logging, monitoring, networking, and security.
+- One Node = One DaemonSet Pod.
