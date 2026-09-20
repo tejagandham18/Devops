@@ -9260,3 +9260,24 @@ Automatically deletes completed Jobs after a specified amount of time.
 - `activeDeadlineSeconds` limits Job execution time.
 - `ttlSecondsAfterFinished` cleans up completed Jobs automatically.
 - Jobs are widely used for backups, migrations, batch processing, and report generation.
+
+kubernetes-zero-to-hero/
+│
+├── 01-Namespace/
+├── 02-Pods/
+├── 03-ReplicaSets/
+├── 04-Deployments/
+├── 05-Services/
+├── 06-ConfigMaps/
+├── 07-Secrets/
+├── 08-Ingress/
+├── 09-RBAC/
+├── 10-Storage/
+├── 11-StatefulSets/
+├── 12-DaemonSets/
+├── 13-Jobs/
+├── 14-CronJobs/
+│   ├── cronjob.yaml
+│   └── README.md
+├── 15-Helm/
+└── 16-Monitoring/
