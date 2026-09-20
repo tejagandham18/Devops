@@ -8567,3 +8567,696 @@ The DaemonSet Pod running on that Node is automatically removed.
 - They automatically adjust when Nodes are added or removed.
 - They are commonly used for logging, monitoring, networking, and security.
 - One Node = One DaemonSet Pod.
+
+
+# Kubernetes Jobs
+
+## Objective
+
+The objective of this practical is to understand how Kubernetes executes **one-time tasks** using **Jobs**.
+
+Unlike Deployments, StatefulSets, and DaemonSets, a Job is designed to **run a task until it completes successfully** and then stop.
+
+---
+
+# What is a Kubernetes Job?
+
+A **Job** is a Kubernetes workload resource that creates one or more Pods to perform a specific task.
+
+Once the task is completed successfully, Kubernetes marks the Job as **Completed**.
+
+Unlike Deployments, Jobs do **not** keep Pods running forever.
+
+---
+
+# Why Do We Need Jobs?
+
+Imagine your manager asks you to:
+
+- Backup a Database
+- Generate a Sales Report
+- Import CSV Data
+- Run a Database Migration
+- Process Images
+- Send Emails
+
+These tasks are executed **only once**.
+
+Example:
+
+```
+Start Backup
+
+↓
+
+Backup Completed
+
+↓
+
+Exit
+```
+
+There is no need to keep the application running forever.
+
+---
+
+# Deployment vs Job
+
+## Deployment
+
+Deployment is used for applications that should always be running.
+
+Examples:
+
+- Nginx
+- React
+- Spring Boot
+- Flask
+
+Workflow:
+
+```
+Deployment
+
+↓
+
+Pod Running
+
+↓
+
+Keep Running Forever
+```
+
+---
+
+## Job
+
+Job is used for one-time tasks.
+
+Examples:
+
+- Database Backup
+- Report Generation
+- CSV Import
+- Database Migration
+
+Workflow:
+
+```
+Job
+
+↓
+
+Pod Starts
+
+↓
+
+Task Executes
+
+↓
+
+Task Completed
+
+↓
+
+Pod Stops
+
+↓
+
+Job Status = Completed
+```
+
+---
+
+# Real-World Example
+
+Imagine a company generates a report every day.
+
+```
+Generate Report
+
+↓
+
+Create report.pdf
+
+↓
+
+Store report
+
+↓
+
+Completed
+```
+
+After generating the report, the application should stop.
+
+This is a perfect use case for a Kubernetes Job.
+
+---
+
+# Kubernetes Job Architecture
+
+```
+                Kubernetes Job
+                      │
+                      ▼
+                 Creates Pod
+                      │
+                      ▼
+              Executes Task
+                      │
+                      ▼
+              Task Completed
+                      │
+                      ▼
+              Job = Completed
+```
+
+---
+
+# Job YAML
+
+File:
+
+```
+job.yaml
+```
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: backup-job
+  namespace: teja-project
+
+spec:
+  template:
+    spec:
+      containers:
+        - name: backup-container
+          image: busybox
+
+          command:
+            - /bin/sh
+            - -c
+            - echo "Database Backup Completed Successfully!"
+
+      restartPolicy: Never
+```
+
+---
+
+# Explanation
+
+## apiVersion
+
+```yaml
+apiVersion: batch/v1
+```
+
+Jobs belong to the Kubernetes Batch API.
+
+Unlike Deployments, Jobs use:
+
+```
+batch/v1
+```
+
+---
+
+## kind
+
+```yaml
+kind: Job
+```
+
+Creates a Kubernetes Job.
+
+---
+
+## metadata
+
+```yaml
+metadata:
+  name: backup-job
+```
+
+Defines the Job name.
+
+---
+
+## template
+
+```yaml
+template:
+```
+
+Defines the Pod specification that the Job creates.
+
+---
+
+## containers
+
+```yaml
+containers:
+```
+
+Defines the container that executes the task.
+
+---
+
+## image
+
+```yaml
+image: busybox
+```
+
+BusyBox is a lightweight Linux container used for demonstration purposes.
+
+---
+
+## command
+
+```yaml
+command:
+```
+
+Executes:
+
+```bash
+echo "Database Backup Completed Successfully!"
+```
+
+After printing the message, the container exits successfully.
+
+---
+
+## restartPolicy
+
+```yaml
+restartPolicy: Never
+```
+
+If the Job completes successfully, Kubernetes does not restart the Pod.
+
+---
+
+# Job Execution Flow
+
+```
+Job Created
+
+↓
+
+Pod Created
+
+↓
+
+Container Starts
+
+↓
+
+Execute Command
+
+↓
+
+Task Completed
+
+↓
+
+Container Exits
+
+↓
+
+Job Status = Completed
+```
+
+---
+
+# Advanced Job Properties
+
+## completions
+
+Determines how many successful executions are required.
+
+Example:
+
+```yaml
+completions: 5
+```
+
+Meaning:
+
+The Job must complete successfully **5 times**.
+
+Workflow:
+
+```
+Execution 1 ✅
+
+Execution 2 ✅
+
+Execution 3 ✅
+
+Execution 4 ✅
+
+Execution 5 ✅
+
+↓
+
+Job Completed
+```
+
+---
+
+## parallelism
+
+Determines how many Pods can run simultaneously.
+
+Example:
+
+```yaml
+parallelism: 2
+```
+
+Meaning:
+
+Only **2 Pods** are allowed to run at the same time.
+
+Example:
+
+```
+Round 1
+
+Pod 1
+Pod 2
+
+↓
+
+Round 2
+
+Pod 3
+Pod 4
+
+↓
+
+Round 3
+
+Pod 5
+
+↓
+
+Completed
+```
+
+---
+
+## completions + parallelism
+
+Example:
+
+```yaml
+completions: 5
+parallelism: 2
+```
+
+Meaning:
+
+- Total successful executions required = 5
+- Maximum Pods running simultaneously = 2
+
+---
+
+## backoffLimit
+
+Defines how many times Kubernetes retries a failed Job.
+
+Example:
+
+```yaml
+backoffLimit: 3
+```
+
+Workflow:
+
+```
+Attempt 1
+
+↓
+
+Failed
+
+↓
+
+Retry 1
+
+↓
+
+Failed
+
+↓
+
+Retry 2
+
+↓
+
+Failed
+
+↓
+
+Retry 3
+
+↓
+
+Success
+```
+
+If all retry attempts fail, Kubernetes marks the Job as **Failed**.
+
+---
+
+## activeDeadlineSeconds
+
+Limits how long a Job is allowed to run.
+
+Example:
+
+```yaml
+activeDeadlineSeconds: 300
+```
+
+Meaning:
+
+If the Job runs longer than **300 seconds (5 minutes)**, Kubernetes terminates it.
+
+Useful for preventing stuck Jobs.
+
+---
+
+## ttlSecondsAfterFinished
+
+Automatically deletes completed Jobs after a specified time.
+
+Example:
+
+```yaml
+ttlSecondsAfterFinished: 60
+```
+
+Meaning:
+
+Delete the completed Job **60 seconds** after it finishes.
+
+Useful for automatic cleanup.
+
+---
+
+# Practical Performed
+
+## Apply Job
+
+```bash
+kubectl apply -f job.yaml
+```
+
+---
+
+## Check Jobs
+
+```bash
+kubectl get jobs -n teja-project
+```
+
+Example:
+
+```
+NAME         COMPLETIONS   DURATION
+backup-job   1/1           5s
+```
+
+---
+
+## Check Pods
+
+```bash
+kubectl get pods -n teja-project
+```
+
+---
+
+## View Logs
+
+```bash
+kubectl logs job/backup-job -n teja-project
+```
+
+Example Output:
+
+```
+Database Backup Completed Successfully!
+```
+
+---
+
+## Delete Job
+
+```bash
+kubectl delete job backup-job -n teja-project
+```
+
+---
+
+# Common Job Commands
+
+Apply Job
+
+```bash
+kubectl apply -f job.yaml
+```
+
+List Jobs
+
+```bash
+kubectl get jobs -n teja-project
+```
+
+Describe Job
+
+```bash
+kubectl describe job backup-job -n teja-project
+```
+
+View Job Logs
+
+```bash
+kubectl logs job/backup-job -n teja-project
+```
+
+Delete Job
+
+```bash
+kubectl delete job backup-job -n teja-project
+```
+
+---
+
+# Job vs Deployment vs StatefulSet vs DaemonSet
+
+| Feature | Deployment | StatefulSet | DaemonSet | Job |
+|----------|------------|-------------|-----------|-----|
+| Purpose | Stateless Apps | Stateful Apps | Node-Level Services | One-Time Tasks |
+| Runs Forever | Yes | Yes | Yes | No |
+| Stable Identity | No | Yes | No | No |
+| Dedicated Storage | Optional | Yes | Usually No | Optional |
+| Uses Replicas | Yes | Yes | No | No |
+| Completion Status | No | No | No | Yes |
+| Examples | Nginx, React | MongoDB, MySQL | Fluentd, Node Exporter | Backup, Reports |
+
+---
+
+# Real-World Use Cases
+
+Jobs are commonly used for:
+
+- Database Backup
+- Database Migration
+- CSV Import
+- Data Processing
+- Report Generation
+- Image Processing
+- Sending Emails
+- Machine Learning Batch Jobs
+- ETL Pipelines
+
+---
+
+# Interview Questions
+
+## What is a Kubernetes Job?
+
+A Job is a Kubernetes workload resource that executes a task until it completes successfully and then stops.
+
+---
+
+## Why use a Job instead of a Deployment?
+
+Deployments are designed for applications that should always be running.
+
+Jobs are designed for one-time tasks that finish and exit.
+
+---
+
+## What is completions?
+
+Defines the total number of successful executions required before the Job is marked as completed.
+
+---
+
+## What is parallelism?
+
+Defines how many Pods can execute simultaneously.
+
+---
+
+## What is backoffLimit?
+
+Specifies the number of retry attempts if a Job fails.
+
+---
+
+## What is restartPolicy?
+
+Defines whether Kubernetes should restart the container inside the Pod.
+
+For Jobs, the common value is:
+
+```yaml
+restartPolicy: Never
+```
+
+---
+
+## What is activeDeadlineSeconds?
+
+Defines the maximum amount of time a Job is allowed to run.
+
+---
+
+## What is ttlSecondsAfterFinished?
+
+Automatically deletes completed Jobs after a specified amount of time.
+
+---
+
+# Key Learnings
+
+- Jobs are used for one-time tasks.
+- Jobs stop after successful completion.
+- Deployments are for continuously running applications.
+- `completions` defines the required successful executions.
+- `parallelism` controls how many Pods run simultaneously.
+- `backoffLimit` controls retry attempts after failure.
+- `activeDeadlineSeconds` limits Job execution time.
+- `ttlSecondsAfterFinished` cleans up completed Jobs automatically.
+- Jobs are widely used for backups, migrations, batch processing, and report generation.
