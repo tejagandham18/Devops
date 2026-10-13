@@ -1936,3 +1936,412 @@ The next phase can focus on making Helm Charts more flexible and reusable, inclu
 - Environment-specific configuration
 - Reusable Helm configurations
 - Advanced Helm templating
+
+# Helm Phase 3 — Chart Customization and Configuration
+
+**Project:** `teja-nginx`  
+**Goal:** Customize a Helm chart using values and override files instead of editing templates for every configuration change.
+
+## 1. Quick recap
+
+In Phase 3, we covered:
+
+- `values.yaml` — the chart's default configuration.
+- `--set` — override a value directly from a Helm command.
+- `-f` / `--values` — load overrides from a YAML file.
+- Precedence — `--set` overrides conflicting values from `-f`; when multiple `-f` files define the same key, the last file wins.
+- Data types — strings, numbers, and booleans must be represented correctly.
+- Nested values — access fields such as `.Values.image.repository` using dot notation.
+- Environment-specific configuration — use different values files for development and production.
+
+Our chart structure:
+
+```text
+teja-nginx/
+├── Chart.yaml
+├── values.yaml
+├── templates/
+├── charts/
+└── .helmignore
+```
+
+A **chart** is the package of templates and configuration. A **release** is an installed instance of that chart, such as `teja-app` or `teja-prod`.
+
+## 2. How Helm values work
+
+A template can contain a placeholder:
+
+```yaml
+spec:
+  replicas: {{ .Values.replicaCount }}
+```
+
+If `values.yaml` contains:
+
+```yaml
+replicaCount: 1
+```
+
+Helm renders the template with `replicas: 1`. Values let us configure a chart without changing its templates.
+
+Conceptually:
+
+```text
+Templates + default values + override values
+                    |
+                    v
+             Helm renders YAML
+                    |
+                    v
+        Install or upgrade a release
+```
+
+**Important:** `helm template` renders manifests locally; it does not deploy them to Kubernetes.
+
+## 3. Topic 1 — `--set` overrides
+
+Use `--set` to override a value directly in a command:
+
+```bash
+helm upgrade --install teja-app ./teja-nginx --set replicaCount=3
+```
+
+Override a nested value:
+
+```bash
+helm template teja-app ./teja-nginx --set image.tag="1.28"
+```
+
+This does not edit the local `values.yaml` file. `--set` is convenient for quick overrides; values files are easier to review and reuse for larger configurations.
+
+## 4. Topic 2 — Values files with `-f`
+
+Example `custom-values.yaml`:
+
+```yaml
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: "1.27"
+```
+
+Use the file:
+
+```bash
+helm upgrade --install teja-app ./teja-nginx \
+  -f ./teja-nginx/custom-values.yaml
+```
+
+Preview the rendered manifests first:
+
+```bash
+helm template teja-app ./teja-nginx \
+  -f ./teja-nginx/custom-values.yaml
+```
+
+The path in these commands assumes the current directory is the parent directory containing `teja-nginx`. Adjust the path if you run the command elsewhere.
+
+Values supplied in an override file replace conflicting chart defaults. Keys not specified in the override generally retain their default values.
+
+## 5. Topic 3 — Values precedence
+
+For the overrides practiced in this phase, remember this simplified order:
+
+1. Chart defaults from `values.yaml`
+2. Values from `-f` files
+3. Values from `--set`
+
+Example:
+
+`values.yaml`:
+
+```yaml
+replicaCount: 1
+```
+
+`values-prod.yaml`:
+
+```yaml
+replicaCount: 3
+```
+
+Command:
+
+```bash
+helm template teja-prod ./teja-nginx \
+  -f ./teja-nginx/values-prod.yaml \
+  --set replicaCount=5
+```
+
+The selected replica count is **5**, because `--set` overrides the conflicting value from the file.
+
+**Upgrade nuance:** Helm upgrades can also use flags such as `--reuse-values` and `--reset-values`, which affect how previous release values are handled. Check those flags when you need precise control over an existing release's values.
+
+## 6. Topic 4 — Data types
+
+YAML values have types. Use the type expected by the chart.
+
+```yaml
+replicaCount: 3       # Number
+image:
+  tag: "1.28"         # String
+autoscaling:
+  enabled: false      # Boolean
+```
+
+- `replicaCount: 3` is numeric.
+- `tag: "1.28"` is a string, appropriate for an image tag.
+- `enabled: false` is a boolean.
+- `enabled: "false"` is a string, not a boolean.
+
+A type mismatch can cause unexpected rendering or template errors. Follow the structure and types in the chart's existing values and templates.
+
+## 7. Topic 5 — Nested values and dot notation
+
+Example values:
+
+```yaml
+image:
+  repository: nginx
+  tag: "1.27"
+  pullPolicy: IfNotPresent
+
+service:
+  port: 80
+  type: ClusterIP
+```
+
+Corresponding template expressions:
+
+| Values key | Helm template expression |
+|---|---|
+| `image.repository` | `.Values.image.repository` |
+| `image.tag` | `.Values.image.tag` |
+| `service.port` | `.Values.service.port` |
+| `service.type` | `.Values.service.type` |
+
+Example template:
+
+```yaml
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+```
+
+With `repository: nginx` and `tag: "1.27"`, this renders as `nginx:1.27`.
+
+Override a nested field:
+
+```bash
+helm template teja-app ./teja-nginx --set service.port=8080
+```
+
+Dot notation follows the hierarchy: `.Values` → `image` → `repository`.
+
+## 8. Topic 6 — Environment-specific values files
+
+The same chart can be configured differently for development and production.
+
+Example directory:
+
+```text
+teja-nginx/
+├── Chart.yaml
+├── values.yaml
+├── values-dev.yaml
+├── values-prod.yaml
+└── templates/
+```
+
+Default `values.yaml`:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.27"
+```
+
+Development `values-dev.yaml`:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.27"
+```
+
+Production `values-prod.yaml`:
+
+```yaml
+replicaCount: 3
+
+image:
+  repository: nginx
+  tag: "1.27"
+```
+
+Deploy or upgrade the development release:
+
+```bash
+helm upgrade --install teja-app ./teja-nginx \
+  -f ./teja-nginx/values-dev.yaml
+```
+
+Deploy or upgrade the production release:
+
+```bash
+helm upgrade --install teja-prod ./teja-nginx \
+  -f ./teja-nginx/values-prod.yaml
+```
+
+Here, development uses one replica and production uses three. The templates remain reusable. The different release names identify separate Helm releases; running both in the same namespace depends on the resources and names generated by the chart.
+
+**Security reminder:** Do not commit passwords, tokens, or other secrets in plain-text values files, especially in public repositories. Use an appropriate secrets-management approach for sensitive settings.
+
+## 9. Topic 7 — Multiple values files
+
+If multiple `-f` files define the same key, the **last file wins**.
+
+`values-dev.yaml`:
+
+```yaml
+replicaCount: 1
+
+image:
+  tag: "1.27"
+```
+
+`values-prod.yaml`:
+
+```yaml
+replicaCount: 3
+
+image:
+  tag: "1.28"
+```
+
+Command:
+
+```bash
+helm upgrade --install teja-prod ./teja-nginx \
+  -f ./teja-nginx/values-dev.yaml \
+  -f ./teja-nginx/values-prod.yaml
+```
+
+For the keys shown, the final configuration is:
+
+```yaml
+replicaCount: 3
+
+image:
+  tag: "1.28"
+```
+
+Helm reads the development file first, then the production file. Production overrides duplicate keys because it is listed last.
+
+A later file only overrides keys it defines. Non-conflicting keys from earlier files can remain in the merged values.
+
+## 10. Useful commands
+
+Run from the parent directory containing `teja-nginx`, adjusting paths if necessary.
+
+Render defaults:
+
+```bash
+helm template teja-app ./teja-nginx
+```
+
+Render with a values file:
+
+```bash
+helm template teja-app ./teja-nginx \
+  -f ./teja-nginx/values-dev.yaml
+```
+
+Render with a direct override:
+
+```bash
+helm template teja-app ./teja-nginx --set replicaCount=3
+```
+
+Render with multiple files:
+
+```bash
+helm template teja-prod ./teja-nginx \
+  -f ./teja-nginx/values-dev.yaml \
+  -f ./teja-nginx/values-prod.yaml
+```
+
+Install or upgrade using production values:
+
+```bash
+helm upgrade --install teja-prod ./teja-nginx \
+  -f ./teja-nginx/values-prod.yaml
+```
+
+Inspect releases:
+
+```bash
+helm list
+helm status teja-prod
+```
+
+`helm template` previews rendered YAML. `helm upgrade --install` installs a release if it does not exist, or upgrades it if it already exists.
+
+## 11. Common mistakes
+
+1. **Expecting `helm template` to deploy resources:** It only renders YAML locally.
+2. **Using the wrong file path:** `-f` must point to the actual file relative to your current directory, or use an absolute path.
+3. **Reversing file order:** The last values file wins for duplicate keys.
+4. **Mixing types:** `false` is a boolean, while `"false"` is a string.
+5. **Editing templates for every environment:** Prefer values overrides for settings the chart already exposes.
+6. **Assuming the last file replaces everything:** It overrides overlapping keys; other keys may remain from earlier files.
+
+## 12. Quick revision quiz
+
+Try answering before reading the answer key.
+
+1. What is the purpose of `values.yaml`?
+2. What does `-f` do?
+3. If the default replica count is `1` and a production file sets it to `3`, what value is used when that file is supplied?
+4. Which wins for a conflicting key in our examples: `-f` or `--set`?
+5. If two values files define the same key, which wins?
+6. What does `.Values.image.repository` refer to?
+7. What is the difference between `enabled: false` and `enabled: "false"`?
+8. Does `helm template` deploy resources?
+9. Why maintain separate development and production values files?
+10. Development sets one replica and image tag `"1.27"`; production sets three replicas and tag `"1.28"`. If development is loaded first and production second, what are the final values?
+
+### Answer key
+
+1. It stores chart defaults.
+2. It loads overrides from a YAML file.
+3. `3`.
+4. `--set`.
+5. The last values file.
+6. The `repository` field nested under `image` in the chart values.
+7. The first is a boolean; the second is a string.
+8. No; it renders manifests locally.
+9. To reuse the same chart with different environment configuration.
+10. `replicaCount: 3` and `image.tag: "1.28"`.
+
+## 13. Phase 3 summary
+
+- **`values.yaml`** — chart defaults.
+- **`--set`** — command-line override.
+- **`-f`** — load a YAML values file.
+- **Precedence** — `--set` overrides conflicting file values in the examples; the last `-f` file wins for duplicate keys.
+- **Data types** — use the correct string, number, or boolean type.
+- **Nested values** — use expressions such as `.Values.image.tag`.
+- **Environment-specific configuration** — keep development and production settings in separate files.
+- **Preview** — use `helm template` to inspect rendered Kubernetes YAML before deployment.
+
+### Next phase
+
+**Phase 4 — Advanced Helm Templates**, beginning with conditional templates using `if` and `else`.
+
+---
+
+*These notes are based on the Helm Phase 3 topics covered in our learning session, with practical examples for the `teja-nginx` chart.*
