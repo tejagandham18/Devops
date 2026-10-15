@@ -2345,3 +2345,693 @@ Try answering before reading the answer key.
 ---
 
 *These notes are based on the Helm Phase 3 topics covered in our learning session, with practical examples for the `teja-nginx` chart.*
+
+
+# Helm Phase 4: Advanced Helm Templates
+## Topic 1: Conditional Templates and Topic 2: Loops
+
+These notes cover conditional logic and loops in Helm templates, with examples and hands-on exercises.
+
+---
+
+# Topic 1: Conditional Templates
+
+## 1. What Are Conditional Templates?
+
+Conditional templates allow Helm to generate different Kubernetes YAML depending on values supplied in `values.yaml`.
+
+In simple words, a condition tells Helm:
+
+- If a condition is true, generate some YAML.
+- Otherwise, generate alternative YAML or skip that section.
+
+Helm templates use Go template syntax.
+
+The main keywords are:
+
+- `if`
+- `else`
+- `end`
+
+## 2. Basic Syntax
+
+```yaml
+{{ if CONDITION }}
+# YAML generated when the condition is true
+{{ else }}
+# YAML generated when the condition is false
+{{ end }}
+```
+
+Important:
+
+- `if` starts the condition.
+- `else` is optional.
+- `end` closes the conditional block.
+
+## 3. Example: Using a Boolean Value
+
+### Step 1: Add a value to `values.yaml`
+
+```yaml
+featureEnabled: true
+```
+
+Here, `featureEnabled` is a Boolean value.
+
+It can be either `true` or `false`.
+
+### Step 2: Create a template
+
+Create a file named `templates/feature-configmap.yaml`:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-feature-config
+data:
+  featureStatus: {{ if .Values.featureEnabled }}"enabled"{{ else }}"disabled"{{ end }}
+```
+
+### Step 3: Understand the template
+
+- `.Values.featureEnabled` reads the value from `values.yaml`.
+- If the value is `true`, Helm generates `"enabled"`.
+- If the value is `false`, Helm generates `"disabled"`.
+
+### Step 4: Render the template
+
+Run this command from the chart directory:
+
+```bash
+helm template teja-app .
+```
+
+With `featureEnabled: true`, the generated ConfigMap contains:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: teja-app-feature-config
+data:
+  featureStatus: "enabled"
+```
+
+If you change the value to:
+
+```yaml
+featureEnabled: false
+```
+
+The generated ConfigMap contains:
+
+```yaml
+data:
+  featureStatus: "disabled"
+```
+
+The exact rendered output also includes other resources from the chart.
+
+## 4. Using `if` Without `else`
+
+You can use `if` without `else` when you want to generate a section only when a condition is true.
+
+Example:
+
+```yaml
+{{ if .Values.featureEnabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feature-config
+data:
+  message: "Feature is enabled"
+{{ end }}
+```
+
+If `featureEnabled` is `true`, Helm generates the ConfigMap.
+
+If it is `false`, Helm skips this entire block.
+
+## 5. Using `if`, `else`, and `end`
+
+Consider this example:
+
+```yaml
+{{ if .Values.featureEnabled }}
+message: "Feature enabled"
+{{ else }}
+message: "Feature disabled"
+{{ end }}
+```
+
+| Value | Result |
+|---|---|
+| `true` | `message: "Feature enabled"` |
+| `false` | `message: "Feature disabled"` |
+
+Only one branch is generated.
+
+## 6. Conditional Templates With Different Values
+
+You can override a value without modifying `values.yaml`.
+
+For example:
+
+```bash
+helm template teja-app . --set featureEnabled=false
+```
+
+This renders the chart with the feature disabled.
+
+The `--set` value overrides the corresponding value from `values.yaml` for this command.
+
+To render with the feature enabled:
+
+```bash
+helm template teja-app . --set featureEnabled=true
+```
+
+## 7. Whitespace Control
+
+Helm templates support whitespace-control characters:
+
+- `{{-` trims whitespace to the left of a template action.
+- `-}}` trims whitespace to the right of a template action.
+
+Example:
+
+```yaml
+{{- if .Values.featureEnabled }}
+featureStatus: enabled
+{{- end }}
+```
+
+Be careful: trimming whitespace can accidentally join YAML lines or remove required newlines.
+
+Always inspect the generated YAML after changing whitespace controls.
+
+## 8. Important Notes
+
+- `.Values` accesses configuration supplied through Helm values.
+- `.Values.featureEnabled` reads the `featureEnabled` value.
+- `if` evaluates a condition.
+- `else` provides an alternative branch.
+- `end` closes the block.
+- `helm template` renders templates locally without installing the chart.
+
+## 9. Common Mistakes
+
+### Mistake 1: Forgetting `end`
+
+Incorrect:
+
+```yaml
+{{ if .Values.featureEnabled }}
+message: enabled
+```
+
+Correct:
+
+```yaml
+{{ if .Values.featureEnabled }}
+message: enabled
+{{ end }}
+```
+
+### Mistake 2: Using a string instead of a Boolean
+
+Boolean:
+
+```yaml
+featureEnabled: true
+```
+
+String:
+
+```yaml
+featureEnabled: "true"
+```
+
+These are different data types. Use the Boolean form when the condition is intended to represent true or false.
+
+### Mistake 3: Assuming `helm template` installs resources
+
+`helm template` only renders the YAML. It does not install or update a release.
+
+---
+
+# Topic 2: Loops With `range`
+
+## 1. What Is `range`?
+
+The `range` keyword allows Helm to iterate over collections of values.
+
+A collection might be:
+
+- A list of items.
+- A map containing keys and values.
+
+In simple words, `range` repeats a template section for each item in a collection.
+
+For example, instead of manually writing three entries, you can define a list in `values.yaml` and let Helm generate the entries automatically.
+
+## 2. Basic Syntax
+
+```yaml
+{{ range COLLECTION }}
+# Template content repeated for each item
+{{ end }}
+```
+
+Important:
+
+- `range` starts the loop.
+- `COLLECTION` identifies the list or map.
+- `.` represents the current item in a simple list loop.
+- `end` closes the loop.
+
+## 3. Example: Looping Through a List
+
+### Step 1: Define a list in `values.yaml`
+
+```yaml
+tools:
+  - Docker
+  - Helm
+  - Kubernetes
+```
+
+This list contains three items.
+
+### Step 2: Create a template
+
+Create `templates/tools-configmap.yaml`:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-tools
+data:
+  tools: |-
+    {{- range .Values.tools }}
+    - {{ . | quote }}
+    {{- end }}
+```
+
+### Step 3: Understand the template
+
+- `.Values.tools` selects the list.
+- `range` visits each item.
+- `.` represents the current item.
+- `quote` wraps the item in double quotes.
+- `end` closes the loop.
+
+### Step 4: Render the chart
+
+```bash
+helm template teja-app .
+```
+
+The generated ConfigMap's `data.tools` value should contain:
+
+```yaml
+tools: |-
+  - "Docker"
+  - "Helm"
+  - "Kubernetes"
+```
+
+The `tools` field is a string containing multiple lines because it uses YAML's block scalar syntax (`|-`).
+
+The exact rendered output also includes other chart resources.
+
+## 4. How Does the Loop Work?
+
+For this list:
+
+```yaml
+tools:
+  - Docker
+  - Helm
+  - Kubernetes
+```
+
+Helm processes the items as follows:
+
+| Iteration | Current value (`.`) |
+|---|---|
+| 1 | Docker |
+| 2 | Helm |
+| 3 | Kubernetes |
+
+The loop executes three times because the list contains three items.
+
+If the list contains five items, the loop executes five times.
+
+If the list is empty, the loop has no items to process.
+
+## 5. Understanding `.` Inside a Loop
+
+The dot (`.`) represents the current template context.
+
+Inside a simple list loop, it represents the current list item.
+
+Example:
+
+```yaml
+{{ range .Values.tools }}
+- {{ . }}
+{{ end }}
+```
+
+When the current item is `Docker`, `.` means `Docker`.
+
+When the current item is `Helm`, `.` means `Helm`.
+
+This behavior is important because the meaning of `.` can change inside nested template blocks.
+
+## 6. Looping Through a Map
+
+A map stores key-value pairs.
+
+### Step 1: Define a map in `values.yaml`
+
+```yaml
+cloudVersions:
+  AWS: "1"
+  Azure: "2"
+  GCP: "3"
+```
+
+Each cloud provider is a key, and its version is the associated value.
+
+### Step 2: Use `range` with a key and value
+
+```yaml
+{{- range $key, $value := .Values.cloudVersions }}
+{{ $key }}: {{ $value | quote }}
+{{- end }}
+```
+
+Here:
+
+- `$key` stores the current key.
+- `$value` stores the value associated with that key.
+- `:=` declares the variables.
+- `end` closes the loop.
+
+The rendered entries will represent:
+
+```yaml
+AWS: "1"
+Azure: "2"
+GCP: "3"
+```
+
+The order of map iteration should not be relied upon unless you explicitly sort the keys.
+
+## 7. Understanding Root Context `$`
+
+Inside a loop, `.` changes to the current item or current context.
+
+Sometimes you still need to access a value from the chart's root context.
+
+The dollar sign (`$`) provides access to the root context established for the template execution.
+
+Example `values.yaml`:
+
+```yaml
+appName: nginx
+
+tools:
+  - Docker
+  - Helm
+  - Kubernetes
+```
+
+Template:
+
+```yaml
+{{- range .Values.tools }}
+tool: {{ . | quote }}
+app: {{ $.Values.appName | quote }}
+{{- end }}
+```
+
+Explanation:
+
+- `.` represents the current tool.
+- `$.Values.appName` accesses the root-level `appName` value.
+
+Conceptually, the output contains three pairs:
+
+```yaml
+tool: "Docker"
+app: "nginx"
+tool: "Helm"
+app: "nginx"
+tool: "Kubernetes"
+app: "nginx"
+```
+
+This snippet illustrates the values generated by the loop. To use it as a real Kubernetes resource, place the generated fields inside an appropriate resource structure.
+
+## 8. Nested Values Inside a Loop
+
+Suppose `values.yaml` contains:
+
+```yaml
+appName: nginx
+
+environments:
+  - name: development
+    replicas: 1
+  - name: staging
+    replicas: 2
+  - name: production
+    replicas: 3
+```
+
+A template can access the fields of each current item:
+
+```yaml
+{{- range .Values.environments }}
+environment: {{ .name | quote }}
+replicas: {{ .replicas }}
+{{- end }}
+```
+
+Within each iteration:
+
+- `.name` accesses the current item's name.
+- `.replicas` accesses the current item's replica count.
+
+The dot represents the current environment object during each iteration.
+
+## 9. Combining `range` With `if`
+
+Loops and conditions can be combined.
+
+Example:
+
+```yaml
+{{- range .Values.tools }}
+{{- if eq . "Helm" }}
+selectedTool: {{ . | quote }}
+{{- end }}
+{{- end }}
+```
+
+This loops through the tools and generates the `selectedTool` entry only when the current item equals `Helm`.
+
+The `eq` function compares values for equality.
+
+This example demonstrates template logic; place generated fields inside a valid Kubernetes resource before using it as a deployable manifest.
+
+## 10. Testing With `helm template`
+
+Use this command from your chart directory:
+
+```bash
+helm template teja-app .
+```
+
+To save the rendered output to a file:
+
+```bash
+helm template teja-app . > rendered.yaml
+```
+
+To inspect a specific template's output, you can also use:
+
+```bash
+helm template teja-app . --show-only templates/tools-configmap.yaml
+```
+
+The path passed to `--show-only` must match the template's path inside the chart.
+
+These commands render the chart locally. They do not install the release.
+
+## 11. Common Mistakes
+
+### Mistake 1: Forgetting `end`
+
+Incorrect:
+
+```yaml
+{{ range .Values.tools }}
+- {{ . }}
+```
+
+Correct:
+
+```yaml
+{{ range .Values.tools }}
+- {{ . }}
+{{ end }}
+```
+
+### Mistake 2: Confusing `.` and `$`
+
+Inside a list loop:
+
+- `.` means the current item.
+- `$.Values.appName` accesses the root-level `appName`.
+
+### Mistake 3: Incorrect YAML indentation
+
+YAML indentation matters. Incorrect indentation can make the generated YAML invalid.
+
+Always inspect the output from `helm template`.
+
+### Mistake 4: Treating a map like a simple list
+
+A list loop typically uses:
+
+```yaml
+{{ range .Values.tools }}
+```
+
+A map loop can use:
+
+```yaml
+{{ range $key, $value := .Values.cloudVersions }}
+```
+
+Use the syntax that matches the data structure.
+
+### Mistake 5: Forgetting that `range` changes the current context
+
+Within a loop, `.` may no longer represent the original root context.
+
+Use `$` when you need to access root-level values.
+
+---
+
+# Practical Exercises
+
+## Exercise 1: Conditional Templates
+
+Add the following to `values.yaml`:
+
+```yaml
+featureEnabled: true
+```
+
+Create a ConfigMap template that outputs `"enabled"` when the value is true and `"disabled"` when it is false.
+
+Render it with:
+
+```bash
+helm template teja-app .
+```
+
+Then override the value:
+
+```bash
+helm template teja-app . --set featureEnabled=false
+```
+
+Verify that the rendered status changes.
+
+## Exercise 2: List Loop
+
+Add the following to `values.yaml`:
+
+```yaml
+tools:
+  - Docker
+  - Helm
+  - Kubernetes
+```
+
+Create a ConfigMap template that uses `range` to place these tools into a multiline string.
+
+Render the chart and verify that all three tools appear.
+
+## Exercise 3: Map Loop
+
+Add the following to `values.yaml`:
+
+```yaml
+cloudVersions:
+  AWS: "1"
+  Azure: "2"
+  GCP: "3"
+```
+
+Use `$key` and `$value` to generate an entry for each provider and its version.
+
+Render the chart and verify that all three key-value pairs appear.
+
+## Exercise 4: Root Context
+
+Use this configuration:
+
+```yaml
+appName: nginx
+
+tools:
+  - Docker
+  - Helm
+  - Kubernetes
+```
+
+Write a loop that outputs the current tool and the root-level application name.
+
+Verify that the tool changes on each iteration while the application name stays the same.
+
+---
+
+# Quick Revision
+
+| Concept | Purpose |
+|---|---|
+| `if` | Generates content when a condition is true |
+| `else` | Provides an alternative branch |
+| `end` | Closes a conditional or loop block |
+| `range` | Iterates through a list or map |
+| `.` | Represents the current template context |
+| `$` | Refers to the root context |
+| `$key` | Stores the current map key |
+| `$value` | Stores the current map value |
+| `quote` | Converts a value into a quoted string representation |
+| `helm template` | Renders chart templates locally |
+| `--set` | Overrides chart values from the command line |
+
+---
+
+# Phase 4 Progress
+
+- [x] Topic 1: Conditional Templates (`if`, `else`, `end`) — concepts covered
+- [x] Topic 2: Loops (`range`) — concepts covered
+- [ ] Topic 3: Named Templates and Helpers (`define`, `include`, `_helpers.tpl`)
+- [ ] Topic 4: Template Functions (`quote`, `default`, `required`, etc.)
+
+**Next topic:** Named Templates and Helpers.
+
+These notes cover the core concepts. Before considering the first two topics fully verified, complete the practical exercises and inspect the rendered YAML for valid structure and indentation.
